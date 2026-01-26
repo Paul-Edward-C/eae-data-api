@@ -1,0 +1,21 @@
+# Cache (column index is 100MB+)
+cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Local development
+.env
+.env.local
+
+# OS files
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
