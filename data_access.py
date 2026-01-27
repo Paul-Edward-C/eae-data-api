@@ -346,12 +346,50 @@ class DataAccess:
         return self._column_index.get(column, {})
 
     def _load_or_build_column_index(self):
-        """Load column index from cache or build it."""
+        """Load column index from cache, R2/S3, or build it."""
+        # Try local cache first
         if COLUMN_INDEX_PATH.exists():
             with open(COLUMN_INDEX_PATH, 'r') as f:
                 self._column_index = json.load(f)
-        else:
-            self._build_column_index()
+            return
+
+        # Try loading from R2/S3 if configured
+        if self.use_s3:
+            try:
+                import boto3
+                from botocore.config import Config
+
+                bucket = os.environ.get('S3_BUCKET', 'eae-data-api')
+                r2_endpoint = os.environ.get('R2_ENDPOINT')
+                access_key = os.environ.get('R2_ACCESS_KEY_ID') or os.environ.get('AWS_ACCESS_KEY_ID')
+                secret_key = os.environ.get('R2_SECRET_ACCESS_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY')
+
+                if r2_endpoint:
+                    s3 = boto3.client('s3',
+                        endpoint_url=f'https://{r2_endpoint}',
+                        aws_access_key_id=access_key,
+                        aws_secret_access_key=secret_key,
+                        config=Config(signature_version='s3v4')
+                    )
+                else:
+                    s3 = boto3.client('s3',
+                        aws_access_key_id=access_key,
+                        aws_secret_access_key=secret_key
+                    )
+
+                # Download index file
+                CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                s3.download_file(bucket, 'column_index.json', str(COLUMN_INDEX_PATH))
+
+                with open(COLUMN_INDEX_PATH, 'r') as f:
+                    self._column_index = json.load(f)
+                print(f"Column index loaded from cloud: {len(self._column_index)} columns")
+                return
+            except Exception as e:
+                print(f"Could not load index from cloud: {e}, building from scratch...")
+
+        # Build from scratch
+        self._build_column_index()
 
     def _build_column_index(self):
         """Build index of all columns across all parquet files."""
