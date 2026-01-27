@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Sync Parquet Files to S3
-========================
-Syncs parquet data files to S3 for the deployed API.
+Sync Parquet Files to S3/R2
+===========================
+Syncs parquet data files to S3 or Cloudflare R2 for the deployed API.
 Excludes files with 'latest', 'recent', 'hist', 'history' in names.
 
 Usage:
@@ -13,7 +13,8 @@ Usage:
     python sync_to_s3.py --file cn_cpi_m    # Sync specific file(s)
 
 Environment Variables:
-    S3_BUCKET: Target S3 bucket (default: eae-data-api)
+    S3_BUCKET: Target S3/R2 bucket (default: eae-data-api)
+    R2_ENDPOINT: Cloudflare R2 endpoint (for R2 usage)
     AWS_PROFILE: AWS profile to use (optional)
 """
 
@@ -22,9 +23,11 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import List, Optional
+import os
 
 # Configuration
 S3_BUCKET = "eae-data-api"  # Override with --bucket or S3_BUCKET env var
+R2_ACCOUNT_ID = "fd2c6c5f2d6d8bc9ca228f83b5671df3"  # Your Cloudflare account ID
 
 LOCAL_DATA_ROOTS = {
     'cn': '/Users/paul/Documents/DATA/cn/cn_input',
@@ -79,11 +82,15 @@ def get_files_to_sync(country: str, specific_files: List[str] = None) -> List[Pa
     return sorted(files)
 
 
-def sync_file(local_path: Path, country: str, bucket: str, dry_run: bool = False) -> bool:
-    """Sync a single file to S3."""
+def sync_file(local_path: Path, country: str, bucket: str, dry_run: bool = False, use_r2: bool = False) -> bool:
+    """Sync a single file to S3 or R2."""
     s3_path = f"s3://{bucket}/{country}/{local_path.name}"
 
-    cmd = ['aws', 's3', 'cp', str(local_path), s3_path]
+    if use_r2:
+        endpoint_url = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+        cmd = ['aws', 's3', 'cp', str(local_path), s3_path, '--endpoint-url', endpoint_url]
+    else:
+        cmd = ['aws', 's3', 'cp', str(local_path), s3_path]
 
     if dry_run:
         print(f"  [DRY RUN] {local_path.name} -> {s3_path}")
@@ -103,7 +110,7 @@ def sync_file(local_path: Path, country: str, bucket: str, dry_run: bool = False
 
 
 def sync_country(country: str, bucket: str, dry_run: bool = False,
-                 specific_files: List[str] = None) -> tuple:
+                 specific_files: List[str] = None, use_r2: bool = False) -> tuple:
     """Sync all files for a country. Returns (success_count, fail_count)."""
     print(f"\n{'[DRY RUN] ' if dry_run else ''}Syncing {country.upper()}...")
 
@@ -119,7 +126,7 @@ def sync_country(country: str, bucket: str, dry_run: bool = False,
     failed = 0
 
     for f in files:
-        if sync_file(f, country, bucket, dry_run):
+        if sync_file(f, country, bucket, dry_run, use_r2):
             success += 1
         else:
             failed += 1
@@ -174,12 +181,19 @@ Examples:
         help='List files that would be synced and exit'
     )
 
+    parser.add_argument(
+        '--r2',
+        action='store_true',
+        help='Use Cloudflare R2 instead of AWS S3'
+    )
+
     args = parser.parse_args()
 
     countries = args.country or list(LOCAL_DATA_ROOTS.keys())
     bucket = args.bucket
 
-    print(f"S3 Bucket: {bucket}")
+    print(f"Storage: {'Cloudflare R2' if args.r2 else 'AWS S3'}")
+    print(f"Bucket: {bucket}")
     print(f"Countries: {', '.join(countries)}")
     print(f"Excluded patterns: {', '.join(EXCLUDED_PATTERNS)}")
 
@@ -206,7 +220,8 @@ Examples:
             country,
             bucket,
             dry_run=args.dry_run,
-            specific_files=args.file
+            specific_files=args.file,
+            use_r2=args.r2
         )
         total_success += success
         total_failed += failed

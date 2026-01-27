@@ -103,21 +103,31 @@ class DataAccess:
         self._column_index = None
 
     def _configure_s3(self):
-        """Configure DuckDB for S3 access."""
+        """Configure DuckDB for S3/R2 access."""
         # Install and load httpfs extension for S3 support
         self.conn.execute("INSTALL httpfs;")
         self.conn.execute("LOAD httpfs;")
 
-        # Configure AWS credentials if provided
-        aws_key = os.environ.get('AWS_ACCESS_KEY_ID')
-        aws_secret = os.environ.get('AWS_SECRET_ACCESS_KEY')
-        aws_region = os.environ.get('AWS_REGION', 'us-east-1')
+        # Configure credentials
+        aws_key = os.environ.get('AWS_ACCESS_KEY_ID') or os.environ.get('R2_ACCESS_KEY_ID')
+        aws_secret = os.environ.get('AWS_SECRET_ACCESS_KEY') or os.environ.get('R2_SECRET_ACCESS_KEY')
+
+        # Check for Cloudflare R2 endpoint
+        r2_endpoint = os.environ.get('R2_ENDPOINT')
 
         if aws_key and aws_secret:
             self.conn.execute(f"SET s3_access_key_id='{aws_key}';")
             self.conn.execute(f"SET s3_secret_access_key='{aws_secret}';")
 
-        self.conn.execute(f"SET s3_region='{aws_region}';")
+        if r2_endpoint:
+            # Cloudflare R2 configuration
+            self.conn.execute(f"SET s3_endpoint='{r2_endpoint}';")
+            self.conn.execute("SET s3_region='auto';")
+            self.conn.execute("SET s3_url_style='path';")
+        else:
+            # Standard AWS S3
+            aws_region = os.environ.get('AWS_REGION', 'us-east-1')
+            self.conn.execute(f"SET s3_region='{aws_region}';")
 
     def _get_parquet_files(self, freq: str, country: str = None) -> List[str]:
         """
