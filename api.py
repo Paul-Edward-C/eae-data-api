@@ -446,10 +446,11 @@ async def get_stats(user: Optional[dict] = Depends(get_optional_user)):
 async def get_series(
     columns: str = Query(..., description="Semicolon-separated column names"),
     freq: str = Query('m', description="Frequency: m, q, a"),
-    start: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    start: Optional[str] = Query(None, description="Start date (YYYY-MM-DD). Defaults to 5 years ago."),
     end: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     country: Optional[str] = Query(None, description="Country filter"),
     format: str = Query('records', description="Output format: records, columns, or csv"),
+    full_history: bool = Query(False, description="Set to true to get full history instead of last 5 years"),
     user: dict = Depends(get_current_user)
 ):
     """
@@ -457,10 +458,16 @@ async def get_series(
 
     **Requires authentication.** Use semicolons (;) to separate multiple columns.
 
+    By default, returns last 5 years of data. Use full_history=true for complete history.
+
     Example: /series?columns=Japan, JGB, 10Y;Japan, JGB, 20Y&freq=m&start=2020-01-01
     """
     # Check rate limit
     rate_info = check_rate_limit(user)
+
+    # Default to last 5 years if no start date and not requesting full history
+    if start is None and not full_history:
+        start = (datetime.now() - timedelta(days=5*365)).strftime('%Y-%m-%d')
 
     try:
         # Parse columns - use semicolon as separator
