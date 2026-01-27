@@ -10,12 +10,40 @@ from fastapi.responses import JSONResponse
 from typing import List, Optional
 from collections import defaultdict
 from datetime import datetime, timedelta
+from functools import lru_cache
+import hashlib
 import pandas as pd
 import jwt
 import requests
 import os
 
 from data_access import DataAccess
+
+# =============================================================================
+# Data Cache (speeds up repeated queries)
+# =============================================================================
+
+_series_cache = {}
+_cache_ttl = 300  # 5 minutes
+
+def get_cached_series(cache_key: str):
+    """Get cached series if not expired."""
+    if cache_key in _series_cache:
+        data, timestamp = _series_cache[cache_key]
+        if (datetime.now() - timestamp).seconds < _cache_ttl:
+            return data
+        del _series_cache[cache_key]
+    return None
+
+def set_cached_series(cache_key: str, data):
+    """Cache series data with timestamp."""
+    # Limit cache size
+    if len(_series_cache) > 100:
+        # Remove oldest entries
+        oldest = sorted(_series_cache.items(), key=lambda x: x[1][1])[:20]
+        for key, _ in oldest:
+            del _series_cache[key]
+    _series_cache[cache_key] = (data, datetime.now())
 
 # =============================================================================
 # Configuration
@@ -438,13 +466,23 @@ async def get_series(
         # Parse columns - use semicolon as separator
         col_list = [c.strip() for c in columns.split(';')]
 
-        df = da.get_series(
-            columns=col_list,
-            freq=freq,
-            start_date=start,
-            end_date=end,
-            country=country
-        )
+        # Check cache first
+        cache_key = hashlib.md5(f"{columns}:{freq}:{start}:{end}:{country}".encode()).hexdigest()
+        cached = get_cached_series(cache_key)
+
+        if cached is not None:
+            df = cached
+        else:
+            df = da.get_series(
+                columns=col_list,
+                freq=freq,
+                start_date=start,
+                end_date=end,
+                country=country
+            )
+            # Cache the result
+            if not df.empty:
+                set_cached_series(cache_key, df.copy())
 
         if df.empty:
             return {
