@@ -1,6 +1,11 @@
 # Cache (column index is 100MB+)
 cache/
 
+# Database files (too large for git)
+*.db
+*.db.gz
+json_data/
+
 # Python
 __pycache__/
 *.pyc

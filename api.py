@@ -18,6 +18,15 @@ import requests
 import os
 
 from data_access import DataAccess
+import json_data_access as jda  # Fast JSON-based access
+
+# SQLite access is optional (only available if data.db exists)
+try:
+    import sqlite_data_access as sda
+    SQLITE_AVAILABLE = True
+except Exception:
+    SQLITE_AVAILABLE = False
+    sda = None
 
 # =============================================================================
 # Data Cache (speeds up repeated queries)
@@ -297,14 +306,15 @@ async def root():
         },
         "tier_limits": TIER_LIMITS,
         "endpoints": {
-            "search": "/search?q={pattern}&freq={m|q|a}",
-            "series": "/series?columns={col1;col2}&freq={m|q|a}&start={date}&end={date}",
-            "columns": "/columns?freq={m|q|a}&country={cn|jp|kr|tw|region}",
-            "info": "/info/{column_name}",
+            "v2_search": "/v2/search?q={pattern}&freq={m|q|a}&country={cn|jp|kr|tw|region} (recommended)",
+            "v2_series": "/v2/series/{series_name}?freq={m|q|a}&start={date}&end={date} (recommended, fast)",
+            "v2_info": "/v2/info/{series_name}",
+            "v2_stats": "/v2/stats",
+            "search": "/search?q={pattern}&freq={m|q|a} (legacy)",
+            "series": "/series?columns={col1;col2}&freq={m|q|a} (legacy, slower)",
             "countries": "/countries",
             "frequencies": "/frequencies",
             "health": "/health",
-            "stats": "/stats",
             "usage": "/usage"
         },
         "note": "Use semicolons (;) to separate multiple columns in /series endpoint",
@@ -603,6 +613,231 @@ async def rebuild_index(user: dict = Depends(get_current_user)):
     try:
         da.rebuild_index()
         return {"status": "success", "message": "Column index rebuilt"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# Fast JSON-Based Endpoints (recommended for speed)
+# =============================================================================
+
+@app.get("/v2/search")
+async def search_series_v2(
+    q: str = Query(..., description="Search pattern (case-insensitive)"),
+    freq: Optional[str] = Query(None, description="Frequency filter: m, q, a"),
+    country: Optional[str] = Query(None, description="Country filter: cn, jp, kr, tw, region"),
+    limit: int = Query(50, description="Maximum results", le=200),
+    user: Optional[dict] = Depends(get_optional_user)
+):
+    """
+    Search for series (v2 - uses fast JSON index).
+
+    No authentication required for search.
+    """
+    if user is None:
+        limit = min(limit, 20)
+
+    try:
+        results = jda.search_series(q, freq=freq, country=country, limit=limit)
+        return {
+            "query": q,
+            "freq": freq,
+            "country": country,
+            "count": len(results),
+            "results": results,
+            "authenticated": user is not None
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v2/series/{series_name:path}")
+async def get_series_v2(
+    series_name: str,
+    freq: Optional[str] = Query(None, description="Frequency: m, q, a (optional, uses index default)"),
+    start: Optional[str] = Query(None, description="Start date (YYYY-MM-DD) - filters returned data"),
+    end: Optional[str] = Query(None, description="End date (YYYY-MM-DD) - filters returned data"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get data for a single series (v2 - fast JSON-based).
+
+    **Requires authentication.**
+
+    This endpoint is much faster than /series as it fetches pre-generated JSON files.
+    """
+    rate_info = check_rate_limit(user)
+
+    try:
+        data = jda.get_series_data(series_name, freq=freq)
+
+        if data is None:
+            raise HTTPException(status_code=404, detail=f"Series not found: {series_name}")
+
+        # Filter by date range if specified
+        if start or end:
+            filtered_data = []
+            for row in data['data']:
+                date = row['Date']
+                if start and date < start:
+                    continue
+                if end and date > end:
+                    continue
+                filtered_data.append(row)
+            data['data'] = filtered_data
+            data['count'] = len(filtered_data)
+            if filtered_data:
+                data['min_date'] = filtered_data[0]['Date']
+                data['max_date'] = filtered_data[-1]['Date']
+
+        data['rate_limit'] = rate_info
+        return data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v2/info/{series_name:path}")
+async def get_series_info_v2(
+    series_name: str,
+    user: Optional[dict] = Depends(get_optional_user)
+):
+    """
+    Get metadata about a series (v2 - fast, no data download).
+
+    No authentication required.
+    """
+    try:
+        info = jda.get_series_info(series_name)
+
+        if info is None:
+            raise HTTPException(status_code=404, detail=f"Series not found: {series_name}")
+
+        return {
+            "series_name": series_name,
+            **info
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v2/stats")
+async def get_stats_v2():
+    """Get statistics about available data (v2)."""
+    try:
+        return jda.get_stats()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# v3 SQLite-Based Endpoints (fastest, recommended)
+# =============================================================================
+
+@app.get("/v3/search")
+async def search_series_v3(
+    q: str = Query(..., description="Search pattern (case-insensitive)"),
+    freq: Optional[str] = Query(None, description="Frequency filter: m, q, a"),
+    country: Optional[str] = Query(None, description="Country filter: cn, jp, kr, tw, region"),
+    limit: int = Query(50, description="Maximum results", le=200),
+    user: Optional[dict] = Depends(get_optional_user)
+):
+    """
+    Search for series (v3 - SQLite, fastest).
+
+    No authentication required for search.
+    Returns series metadata without data.
+    """
+    if not SQLITE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="SQLite database not available. Use /search instead.")
+
+    if user is None:
+        limit = min(limit, 20)
+
+    try:
+        results = sda.search_series(q, freq=freq, country=country, limit=limit)
+        return {
+            "query": q,
+            "freq": freq,
+            "country": country,
+            "count": len(results),
+            "results": results,
+            "authenticated": user is not None
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v3/series/{series_name:path}")
+async def get_series_v3(
+    series_name: str,
+    start: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get data for a single series (v3 - SQLite, fastest).
+
+    **Requires authentication.**
+    """
+    if not SQLITE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="SQLite database not available. Use /series instead.")
+
+    rate_info = check_rate_limit(user)
+
+    try:
+        data = sda.get_series_data(series_name, start=start, end=end)
+
+        if data is None:
+            raise HTTPException(status_code=404, detail=f"Series not found: {series_name}")
+
+        data['rate_limit'] = rate_info
+        return data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v3/info/{series_name:path}")
+async def get_series_info_v3(
+    series_name: str,
+    user: Optional[dict] = Depends(get_optional_user)
+):
+    """
+    Get metadata about a series (v3 - SQLite).
+
+    No authentication required.
+    """
+    if not SQLITE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="SQLite database not available.")
+
+    try:
+        info = sda.get_series_info(series_name)
+
+        if info is None:
+            raise HTTPException(status_code=404, detail=f"Series not found: {series_name}")
+
+        return info
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v3/stats")
+async def get_stats_v3():
+    """Get statistics about available data (v3 - SQLite)."""
+    if not SQLITE_AVAILABLE:
+        raise HTTPException(status_code=503, detail="SQLite database not available. Use /stats instead.")
+
+    try:
+        return sda.get_stats()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
