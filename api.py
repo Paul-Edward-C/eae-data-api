@@ -842,6 +842,51 @@ async def get_stats_v3():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/v3/debug")
+async def debug_v3():
+    """Debug endpoint for SQLite database status."""
+    import subprocess
+    from pathlib import Path
+
+    result = {
+        "sqlite_available": SQLITE_AVAILABLE,
+        "db_path": str(sda.DB_PATH) if SQLITE_AVAILABLE else None,
+        "db_exists": sda.DB_PATH.exists() if SQLITE_AVAILABLE else False,
+        "db_url": sda.DB_URL if SQLITE_AVAILABLE else None,
+    }
+
+    if SQLITE_AVAILABLE:
+        # Check if curl is available
+        try:
+            curl_result = subprocess.run(['curl', '--version'], capture_output=True, text=True, timeout=5)
+            result["curl_available"] = curl_result.returncode == 0
+        except Exception as e:
+            result["curl_available"] = False
+            result["curl_error"] = str(e)
+
+        # Check if gunzip is available
+        try:
+            gunzip_result = subprocess.run(['gunzip', '--version'], capture_output=True, text=True, timeout=5)
+            result["gunzip_available"] = gunzip_result.returncode == 0
+        except Exception as e:
+            result["gunzip_available"] = False
+            result["gunzip_error"] = str(e)
+
+        # Try to download and see what happens
+        if not sda.DB_PATH.exists():
+            try:
+                import requests
+                response = requests.head(sda.DB_URL, allow_redirects=True, timeout=10)
+                result["url_accessible"] = response.status_code == 200
+                result["url_status"] = response.status_code
+                result["content_length"] = response.headers.get('content-length')
+            except Exception as e:
+                result["url_accessible"] = False
+                result["url_error"] = str(e)
+
+    return result
+
+
 # =============================================================================
 # Run
 # =============================================================================
