@@ -14,7 +14,8 @@ from pathlib import Path
 
 # Database path
 DB_PATH = Path(__file__).parent / 'data.db'
-DB_URL = "https://github.com/Paul-Edward-C/eae-data-api/releases/download/v1.0.0-data/data.db.gz"
+# Use monthly database (smaller: 865MB compressed, 3.3GB decompressed)
+DB_URL = "https://github.com/Paul-Edward-C/eae-data-api/releases/download/v1.0.0-data/data_monthly.db.gz"
 
 # Connection pool (reuse connections)
 _connection = None
