@@ -2,23 +2,81 @@
 SQLite Data Access Layer
 ========================
 Fast data access using local SQLite database.
+Downloads database from GitHub releases if not present.
 """
 
 import sqlite3
+import gzip
+import shutil
+import os
 from typing import Optional, List, Dict
 from pathlib import Path
 
 # Database path
 DB_PATH = Path(__file__).parent / 'data.db'
+DB_URL = "https://github.com/Paul-Edward-C/eae-data-api/releases/download/v1.0.0-data/data.db.gz"
 
 # Connection pool (reuse connections)
 _connection = None
+
+
+def download_database():
+    """Download and decompress database from GitHub releases."""
+    import requests
+
+    if DB_PATH.exists():
+        print(f"Database already exists: {DB_PATH}")
+        return True
+
+    print(f"Downloading database from {DB_URL}...")
+    gz_path = DB_PATH.parent / 'data.db.gz'
+
+    try:
+        # Download with streaming
+        response = requests.get(DB_URL, stream=True, timeout=600)
+        response.raise_for_status()
+
+        total_size = int(response.headers.get('content-length', 0))
+        downloaded = 0
+
+        with open(gz_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+                downloaded += len(chunk)
+                if total_size > 0:
+                    pct = downloaded / total_size * 100
+                    if downloaded % (50 * 1024 * 1024) < 8192:  # Log every 50MB
+                        print(f"  Downloaded {downloaded / 1024 / 1024:.0f}MB ({pct:.1f}%)")
+
+        print(f"Download complete. Decompressing...")
+
+        # Decompress
+        with gzip.open(gz_path, 'rb') as f_in:
+            with open(DB_PATH, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+
+        # Remove compressed file
+        gz_path.unlink()
+
+        print(f"Database ready: {DB_PATH} ({DB_PATH.stat().st_size / 1024 / 1024:.0f}MB)")
+        return True
+
+    except Exception as e:
+        print(f"Error downloading database: {e}")
+        if gz_path.exists():
+            gz_path.unlink()
+        return False
 
 
 def get_connection():
     """Get database connection (reuses existing connection)."""
     global _connection
     if _connection is None:
+        # Download database if not present
+        if not DB_PATH.exists():
+            if not download_database():
+                raise RuntimeError("Could not download database")
+
         _connection = sqlite3.connect(DB_PATH, check_same_thread=False)
         _connection.row_factory = sqlite3.Row
     return _connection
