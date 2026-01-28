@@ -23,7 +23,8 @@ _connection = None
 
 def download_database():
     """Download and decompress database from GitHub releases."""
-    import requests
+    import subprocess
+    import traceback
 
     if DB_PATH.exists():
         print(f"Database already exists: {DB_PATH}")
@@ -33,37 +34,46 @@ def download_database():
     gz_path = DB_PATH.parent / 'data.db.gz'
 
     try:
-        # Download with streaming
-        response = requests.get(DB_URL, stream=True, timeout=600)
-        response.raise_for_status()
+        # Use curl for more robust download (handles redirects better)
+        print("Using curl to download...")
+        result = subprocess.run(
+            ['curl', '-L', '-o', str(gz_path), '--progress-bar', DB_URL],
+            capture_output=True,
+            text=True,
+            timeout=1200  # 20 minutes timeout
+        )
+        if result.returncode != 0:
+            print(f"curl failed: {result.stderr}")
+            return False
 
-        total_size = int(response.headers.get('content-length', 0))
-        downloaded = 0
+        print(f"Download complete: {gz_path.stat().st_size / 1024 / 1024:.0f}MB")
+        print("Decompressing with gunzip...")
 
-        with open(gz_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-                downloaded += len(chunk)
-                if total_size > 0:
-                    pct = downloaded / total_size * 100
-                    if downloaded % (50 * 1024 * 1024) < 8192:  # Log every 50MB
-                        print(f"  Downloaded {downloaded / 1024 / 1024:.0f}MB ({pct:.1f}%)")
+        # Use gunzip for streaming decompression (lower memory)
+        result = subprocess.run(
+            ['gunzip', '-f', str(gz_path)],
+            capture_output=True,
+            text=True,
+            timeout=600
+        )
+        if result.returncode != 0:
+            print(f"gunzip failed: {result.stderr}")
+            return False
 
-        print(f"Download complete. Decompressing...")
-
-        # Decompress
-        with gzip.open(gz_path, 'rb') as f_in:
-            with open(DB_PATH, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-
-        # Remove compressed file
-        gz_path.unlink()
+        # Rename to data.db if needed
+        decompressed = gz_path.with_suffix('')  # removes .gz
+        if decompressed != DB_PATH and decompressed.exists():
+            decompressed.rename(DB_PATH)
 
         print(f"Database ready: {DB_PATH} ({DB_PATH.stat().st_size / 1024 / 1024:.0f}MB)")
         return True
 
+    except subprocess.TimeoutExpired:
+        print("Download/decompress timed out")
+        return False
     except Exception as e:
         print(f"Error downloading database: {e}")
+        traceback.print_exc()
         if gz_path.exists():
             gz_path.unlink()
         return False
