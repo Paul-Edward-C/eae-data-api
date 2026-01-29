@@ -19,6 +19,7 @@ import os
 
 from data_access import DataAccess
 import json_data_access as jda  # Fast JSON-based access
+import api_keys
 
 # SQLite access is optional (only available if data.db exists)
 try:
@@ -65,15 +66,15 @@ GHOST_ADMIN_KEY = os.environ.get('GHOST_ADMIN_KEY', '')
 # Legacy API keys (for backwards compatibility / admin access)
 API_KEYS = os.environ.get('API_KEYS', 'demo-key-123').split(',')
 
-# Tier limits (requests per day)
+# Tier limits (series lookups per month)
 # Maps to Ghost Pro tiers:
 #   - free: Free members (no paid tier)
 #   - daily: "Daily" tier subscribers
 #   - premium: "Daily + Data" and "East Asia" tier subscribers, plus admin API key users
 TIER_LIMITS = {
-    'free': 10,        # Free Ghost members
-    'daily': 100,      # "Daily" tier subscribers
-    'premium': 10000,  # "Daily + Data", "East Asia" tiers, and admin
+    'free': 10,        # Free Ghost members — 10/month
+    'daily': 30,       # "Daily" tier subscribers — 30/month
+    'premium': None,   # "Daily + Data", "East Asia" tiers, and admin — unlimited
 }
 
 # =============================================================================
@@ -87,21 +88,21 @@ API for accessing economic time series data for China, Japan, Korea, Taiwan, and
 
 ## Authentication
 
-**For Ghost Members:** Use your member token in the Authorization header:
+**Per-user API key (recommended):** Get your key at /api-keys/ on eastasiaecon.com, then:
+```
+X-API-Key: eae_your_key_here
+```
+
+**Ghost member token:** Use your member JWT:
 ```
 Authorization: Bearer <your_ghost_member_token>
 ```
 
-**For Admin/Legacy:** Use API key in X-API-Key header:
-```
-X-API-Key: <your_api_key>
-```
+## Rate Limits (monthly)
 
-## Rate Limits
-
-- Free: 10 requests/day
-- Daily: 100 requests/day
-- Premium: 10,000 requests/day (Daily + Data, East Asia tiers)
+- Free members: 10 series lookups/month
+- Daily subscribers: 30 series lookups/month
+- Premium (Daily + Data, East Asia): Unlimited
 """,
     version="2.0.0",
     docs_url="/docs",
@@ -121,7 +122,10 @@ app.add_middleware(
 # Data access instance
 da = DataAccess()
 
-# Simple in-memory rate limiter (use Redis for production at scale)
+# Initialize API keys database
+api_keys.init_db()
+
+# Simple in-memory rate limiter (legacy fallback for Ghost JWT auth)
 request_counts = defaultdict(lambda: {'count': 0, 'reset': datetime.now()})
 
 # =============================================================================
@@ -134,61 +138,16 @@ def get_ghost_member(token: str) -> Optional[dict]:
         return None
 
     try:
-        # Decode the member JWT (Ghost uses signed JWTs for members)
-        # We decode without verification first to get the email
         decoded = jwt.decode(token, options={"verify_signature": False})
         email = decoded.get('sub') or decoded.get('email')
 
         if not email:
             return None
 
-        # Create Ghost Admin API token
-        key_id, key_secret = GHOST_ADMIN_KEY.split(':')
-        iat = int(datetime.now().timestamp())
-        header = {'alg': 'HS256', 'typ': 'JWT', 'kid': key_id}
-        payload = {'iat': iat, 'exp': iat + 300, 'aud': '/admin/'}
-        admin_token = jwt.encode(
-            payload,
-            bytes.fromhex(key_secret),
-            algorithm='HS256',
-            headers=header
-        )
-
-        # Fetch member from Ghost Admin API
-        response = requests.get(
-            f"{GHOST_URL}/ghost/api/admin/members/?filter=email:'{email}'",
-            headers={"Authorization": f"Ghost {admin_token}"},
-            timeout=10
-        )
-
-        if response.ok:
-            members = response.json().get('members', [])
-            if members:
-                member = members[0]
-
-                # Determine tier from Ghost tiers/products
-                # Maps to: "Daily + Data" or "East Asia" → premium, "Daily" → daily, else → free
-                tier_names = [t.get('name', '').lower() for t in member.get('tiers', [])]
-
-                if any('east asia' in t or 'data' in t for t in tier_names):
-                    # "Daily + Data" or "East Asia" tiers get premium
-                    tier = 'premium'
-                elif any('daily' in t for t in tier_names):
-                    # "Daily" tier
-                    tier = 'daily'
-                elif member.get('status') == 'comped':
-                    # Comped members get premium access
-                    tier = 'premium'
-                else:
-                    tier = 'free'
-
-                return {
-                    'email': email,
-                    'name': member.get('name', ''),
-                    'tier': tier,
-                    'uuid': member.get('uuid'),
-                    'auth_type': 'ghost'
-                }
+        member = _lookup_ghost_member_by_email(email)
+        if member:
+            member['auth_type'] = 'ghost'
+            return member
 
         return None
 
@@ -196,6 +155,72 @@ def get_ghost_member(token: str) -> Optional[dict]:
         return None
     except Exception as e:
         print(f"Ghost auth error: {e}")
+        return None
+
+
+# =============================================================================
+# Ghost Admin API Helpers
+# =============================================================================
+
+def _get_ghost_admin_token() -> Optional[str]:
+    """Create a Ghost Admin API JWT for server-to-server calls."""
+    if not GHOST_URL or not GHOST_ADMIN_KEY:
+        return None
+    try:
+        key_id, key_secret = GHOST_ADMIN_KEY.split(':')
+        iat = int(datetime.now().timestamp())
+        header = {'alg': 'HS256', 'typ': 'JWT', 'kid': key_id}
+        payload = {'iat': iat, 'exp': iat + 300, 'aud': '/admin/'}
+        return jwt.encode(
+            payload,
+            bytes.fromhex(key_secret),
+            algorithm='HS256',
+            headers=header
+        )
+    except Exception:
+        return None
+
+
+def _determine_tier(member: dict) -> str:
+    """Determine API tier from Ghost member data."""
+    tier_names = [t.get('name', '').lower() for t in member.get('tiers', [])]
+    if any('east asia' in t or 'data' in t for t in tier_names):
+        return 'premium'
+    elif any('daily' in t for t in tier_names):
+        return 'daily'
+    elif member.get('status') == 'comped':
+        return 'premium'
+    return 'free'
+
+
+def _lookup_ghost_member_by_email(email: str) -> Optional[dict]:
+    """
+    Look up a Ghost member by email via the Admin API.
+    Returns dict with email, name, tier, uuid — or None if not found.
+    """
+    admin_token = _get_ghost_admin_token()
+    if not admin_token:
+        return None
+
+    try:
+        response = requests.get(
+            f"{GHOST_URL}/ghost/api/admin/members/?filter=email:'{email}'",
+            headers={"Authorization": f"Ghost {admin_token}"},
+            timeout=10
+        )
+        if response.ok:
+            members = response.json().get('members', [])
+            if members:
+                member = members[0]
+                return {
+                    'email': member.get('email', email),
+                    'name': member.get('name', ''),
+                    'tier': _determine_tier(member),
+                    'uuid': member.get('uuid'),
+                }
+        return None
+    except Exception as e:
+        print(f"Ghost lookup error: {e}")
         return None
 
 
@@ -208,17 +233,31 @@ async def get_current_user(
     x_api_key: Optional[str] = Header(None)
 ) -> dict:
     """
-    Authenticate user via Ghost member token OR legacy API key.
+    Authenticate user via per-user API key, Ghost member token, or legacy API key.
     Returns user info with tier.
     """
-    # Try Ghost member token first
+    # 1. Try per-user API key (eae_... keys stored in keys.db)
+    if x_api_key and x_api_key.startswith('eae_'):
+        key_info = api_keys.get_key_info(x_api_key)
+        if key_info:
+            return {
+                'email': key_info['email'],
+                'name': key_info['name'],
+                'tier': key_info['tier'],
+                'uuid': key_info.get('ghost_uuid'),
+                'auth_type': 'user_api_key',
+                'api_key': key_info['api_key']
+            }
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    # 2. Try Ghost member token
     if authorization and authorization.startswith('Bearer '):
         token = authorization.replace('Bearer ', '')
         member = get_ghost_member(token)
         if member:
             return member
 
-    # Fall back to API key (admin access = premium tier)
+    # 3. Fall back to legacy env-var API key (admin access = premium tier)
     if x_api_key and x_api_key in API_KEYS:
         return {
             'email': 'api_key_user',
@@ -231,7 +270,7 @@ async def get_current_user(
     # No valid auth
     raise HTTPException(
         status_code=401,
-        detail="Authentication required. Provide Ghost member token (Authorization: Bearer <token>) or API key (X-API-Key: <key>)"
+        detail="Authentication required. Provide API key (X-API-Key: eae_...) or Ghost member token (Authorization: Bearer <token>)"
     )
 
 
@@ -252,22 +291,49 @@ async def get_optional_user(
 
 def check_rate_limit(user: dict) -> dict:
     """
-    Check if user has exceeded their tier's rate limit.
-    Returns remaining requests info.
+    Check if user has exceeded their tier's monthly rate limit.
+    Uses SQLite tracking for per-user API keys, in-memory for legacy auth.
     """
-    identifier = user.get('email', 'anonymous')
     tier = user.get('tier', 'free')
+
+    # Per-user API keys: use SQLite monthly tracking
+    if user.get('auth_type') == 'user_api_key' and user.get('api_key'):
+        usage = api_keys.check_and_increment_usage(user['api_key'], tier)
+
+        if usage['limit'] is not None and usage['used'] > usage['limit']:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error": "Monthly rate limit exceeded",
+                    "tier": tier,
+                    "limit": usage['limit'],
+                    "used": usage['used'],
+                    "month": usage['month'],
+                    "upgrade": "Upgrade your Ghost membership for higher limits"
+                }
+            )
+
+        return {
+            'used': usage['used'],
+            'limit': usage['limit'],
+            'remaining': usage['remaining'],
+            'tier': tier,
+            'period': 'monthly',
+            'month': usage['month']
+        }
+
+    # Legacy auth (Ghost JWT / env-var keys): use in-memory daily tracking
+    identifier = user.get('email', 'anonymous')
     limit = TIER_LIMITS.get(tier, TIER_LIMITS['free'])
 
     now = datetime.now()
     user_data = request_counts[identifier]
 
-    # Reset daily at midnight
     if now - user_data['reset'] > timedelta(days=1):
         user_data['count'] = 0
         user_data['reset'] = now
 
-    if user_data['count'] >= limit:
+    if limit is not None and user_data['count'] >= limit:
         reset_time = user_data['reset'] + timedelta(days=1)
         raise HTTPException(
             status_code=429,
@@ -284,7 +350,7 @@ def check_rate_limit(user: dict) -> dict:
     return {
         'used': user_data['count'],
         'limit': limit,
-        'remaining': limit - user_data['count'],
+        'remaining': (limit - user_data['count']) if limit is not None else None,
         'tier': tier
     }
 
@@ -301,8 +367,9 @@ async def root():
         "version": "2.0.0",
         "description": "Economic time series data for China, Japan, Korea, Taiwan, and regional aggregates",
         "authentication": {
+            "per_user_key": "X-API-Key: eae_... (get yours at /api-keys/)",
             "ghost_members": "Authorization: Bearer <member_token>",
-            "api_key": "X-API-Key: <api_key>"
+            "legacy_api_key": "X-API-Key: <admin_key>"
         },
         "tier_limits": TIER_LIMITS,
         "endpoints": {
@@ -577,10 +644,31 @@ async def get_column_info(
 @app.get("/usage")
 async def get_usage(user: dict = Depends(get_current_user)):
     """Get current user's API usage and rate limit status."""
-    identifier = user.get('email', 'anonymous')
     tier = user.get('tier', 'free')
     limit = TIER_LIMITS.get(tier, TIER_LIMITS['free'])
 
+    # Per-user API key: read from SQLite
+    if user.get('auth_type') == 'user_api_key' and user.get('api_key'):
+        usage = api_keys.get_usage(user['api_key'])
+        return {
+            "user": {
+                "email": user.get('email'),
+                "name": user.get('name'),
+                "tier": tier,
+                "auth_type": user.get('auth_type')
+            },
+            "usage": {
+                "requests_used": usage['used'],
+                "requests_limit": limit,
+                "requests_remaining": max(0, limit - usage['used']) if limit is not None else None,
+                "period": "monthly",
+                "month": usage['month']
+            },
+            "tier_limits": TIER_LIMITS
+        }
+
+    # Legacy auth
+    identifier = user.get('email', 'anonymous')
     user_data = request_counts.get(identifier, {'count': 0, 'reset': datetime.now()})
 
     return {
@@ -593,10 +681,120 @@ async def get_usage(user: dict = Depends(get_current_user)):
         "usage": {
             "requests_used": user_data['count'],
             "requests_limit": limit,
-            "requests_remaining": max(0, limit - user_data['count']),
+            "requests_remaining": max(0, limit - user_data['count']) if limit is not None else None,
             "reset_at": (user_data['reset'] + timedelta(days=1)).isoformat()
         },
         "tier_limits": TIER_LIMITS
+    }
+
+
+# =============================================================================
+# API Key Management Routes
+# =============================================================================
+
+@app.post("/keys/provision")
+async def provision_api_key(
+    email: str = Query(..., description="Ghost member email address")
+):
+    """
+    Provision an API key for a Ghost member.
+    Validates email against Ghost Admin API before issuing a key.
+    Idempotent: returns existing key if already provisioned.
+    """
+    # Validate against Ghost
+    ghost_member = _lookup_ghost_member_by_email(email)
+    if not ghost_member:
+        raise HTTPException(
+            status_code=403,
+            detail="Email not found in Ghost membership. You must be a registered member."
+        )
+
+    # Provision (or return existing) key
+    key_info = api_keys.provision_key(
+        email=ghost_member['email'],
+        name=ghost_member.get('name', ''),
+        tier=ghost_member['tier'],
+        ghost_uuid=ghost_member.get('uuid')
+    )
+
+    # Get current usage
+    usage = api_keys.get_usage(key_info['api_key'])
+    limit = TIER_LIMITS.get(key_info['tier'], TIER_LIMITS['free'])
+
+    return {
+        "api_key": key_info['api_key'],
+        "email": key_info['email'],
+        "name": key_info['name'],
+        "tier": key_info['tier'],
+        "created_at": key_info['created_at'],
+        "usage": {
+            "used": usage['used'],
+            "limit": limit,
+            "remaining": max(0, limit - usage['used']) if limit is not None else None,
+            "month": usage['month']
+        }
+    }
+
+
+@app.get("/keys/me")
+async def get_my_key(user: dict = Depends(get_current_user)):
+    """
+    Get the current user's API key info and usage.
+    Requires authentication with a per-user API key.
+    """
+    if user.get('auth_type') != 'user_api_key':
+        raise HTTPException(
+            status_code=400,
+            detail="This endpoint requires a per-user API key (eae_...). Use POST /keys/provision to get one."
+        )
+
+    usage = api_keys.get_usage(user['api_key'])
+    limit = TIER_LIMITS.get(user['tier'], TIER_LIMITS['free'])
+
+    return {
+        "api_key": user['api_key'],
+        "email": user['email'],
+        "name": user['name'],
+        "tier": user['tier'],
+        "usage": {
+            "used": usage['used'],
+            "limit": limit,
+            "remaining": max(0, limit - usage['used']) if limit is not None else None,
+            "month": usage['month']
+        }
+    }
+
+
+@app.post("/keys/regenerate")
+async def regenerate_api_key(
+    email: str = Query(..., description="Ghost member email address")
+):
+    """
+    Generate a new API key, invalidating the old one.
+    Validates email against Ghost Admin API.
+    """
+    # Validate against Ghost
+    ghost_member = _lookup_ghost_member_by_email(email)
+    if not ghost_member:
+        raise HTTPException(
+            status_code=403,
+            detail="Email not found in Ghost membership."
+        )
+
+    key_info = api_keys.regenerate_key(email)
+    if not key_info:
+        raise HTTPException(
+            status_code=404,
+            detail="No existing API key found for this email. Use POST /keys/provision first."
+        )
+
+    return {
+        "api_key": key_info['api_key'],
+        "email": key_info['email'],
+        "name": key_info['name'],
+        "tier": key_info['tier'],
+        "created_at": key_info['created_at'],
+        "message": "New key generated. Your old key has been deactivated."
     }
 
 
