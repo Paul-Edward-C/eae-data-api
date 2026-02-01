@@ -3,6 +3,10 @@ cache/
 cache/*
 column_index.json
 
+# SQLite database (6GB, downloaded from R2 at runtime)
+data.db
+data.db.gz
+
 # Python
 __pycache__/
 *.pyc

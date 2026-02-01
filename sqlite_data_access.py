@@ -2,80 +2,77 @@
 SQLite Data Access Layer
 ========================
 Fast data access using local SQLite database.
-Downloads database from GitHub releases if not present.
+Downloads database from R2 if not present.
 """
 
 import sqlite3
-import gzip
-import shutil
 import os
 from typing import Optional, List, Dict
 from pathlib import Path
 
-# Database path
-DB_PATH = Path(__file__).parent / 'data.db'
-# Use monthly database (smaller: 865MB compressed, 3.3GB decompressed)
-DB_URL = "https://github.com/Paul-Edward-C/eae-data-api/releases/download/v1.0.0-data/data_monthly.db.gz"
+# Database path — use Railway volume if available so DB persists across deploys
+_volume = os.environ.get('RAILWAY_VOLUME_MOUNT_PATH')
+DB_PATH = Path(_volume) / 'data.db' if _volume else Path(__file__).parent / 'data.db'
+
+# R2 download configuration
+R2_BUCKET = os.environ.get('S3_BUCKET', 'eae-data-api')
+R2_ENDPOINT = os.environ.get('R2_ENDPOINT', 'fd2c6c5f2d6d8bc9ca228f83b5671df3.r2.cloudflarestorage.com')
+R2_DB_KEY = 'data.db.gz'
 
 # Connection pool (reuse connections)
 _connection = None
 
 
 def download_database():
-    """Download and decompress database from GitHub releases."""
-    import subprocess
+    """Download and decompress database from R2 using boto3."""
+    import gzip
+    import shutil
     import traceback
+    import boto3
+    from botocore.config import Config
 
     if DB_PATH.exists():
         print(f"Database already exists: {DB_PATH}")
         return True
 
-    print(f"Downloading database from {DB_URL}...")
     gz_path = DB_PATH.parent / 'data.db.gz'
 
     try:
-        # Use curl for more robust download (handles redirects better)
-        print("Using curl to download...")
-        result = subprocess.run(
-            ['curl', '-L', '-o', str(gz_path), '--progress-bar', DB_URL],
-            capture_output=True,
-            text=True,
-            timeout=1200  # 20 minutes timeout
+        access_key = os.environ.get('R2_ACCESS_KEY_ID') or os.environ.get('AWS_ACCESS_KEY_ID')
+        secret_key = os.environ.get('R2_SECRET_ACCESS_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY')
+
+        client = boto3.client(
+            's3',
+            endpoint_url=f'https://{R2_ENDPOINT}',
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            region_name='auto',
+            config=Config(signature_version='s3v4')
         )
-        if result.returncode != 0:
-            print(f"curl failed: {result.stderr}")
-            return False
+
+        print(f"Downloading database from R2 ({R2_BUCKET}/{R2_DB_KEY})...")
+        client.download_file(R2_BUCKET, R2_DB_KEY, str(gz_path))
 
         print(f"Download complete: {gz_path.stat().st_size / 1024 / 1024:.0f}MB")
-        print("Decompressing with gunzip...")
+        print("Decompressing...")
 
-        # Use gunzip for streaming decompression (lower memory)
-        result = subprocess.run(
-            ['gunzip', '-f', str(gz_path)],
-            capture_output=True,
-            text=True,
-            timeout=600
-        )
-        if result.returncode != 0:
-            print(f"gunzip failed: {result.stderr}")
-            return False
+        with gzip.open(gz_path, 'rb') as f_in:
+            with open(DB_PATH, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
-        # Rename to data.db if needed
-        decompressed = gz_path.with_suffix('')  # removes .gz
-        if decompressed != DB_PATH and decompressed.exists():
-            decompressed.rename(DB_PATH)
+        # Remove compressed file
+        gz_path.unlink()
 
         print(f"Database ready: {DB_PATH} ({DB_PATH.stat().st_size / 1024 / 1024:.0f}MB)")
         return True
 
-    except subprocess.TimeoutExpired:
-        print("Download/decompress timed out")
-        return False
     except Exception as e:
         print(f"Error downloading database: {e}")
         traceback.print_exc()
         if gz_path.exists():
             gz_path.unlink()
+        if DB_PATH.exists():
+            DB_PATH.unlink()
         return False
 
 
@@ -83,7 +80,6 @@ def get_connection():
     """Get database connection (reuses existing connection)."""
     global _connection
     if _connection is None:
-        # Download database if not present
         if not DB_PATH.exists():
             if not download_database():
                 raise RuntimeError("Could not download database")
@@ -94,94 +90,107 @@ def get_connection():
 
 
 def search_series(query: str, freq: Optional[str] = None, country: Optional[str] = None, limit: int = 50) -> List[Dict]:
-    """Search for series by name using full-text search."""
+    """
+    Search for series by name. Groups results by series name and returns
+    available frequencies for each.
+    """
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Try FTS first for speed
+    # Build query to get matching series grouped by name
     try:
-        if freq or country:
-            # FTS with filters - need to join
-            sql = '''
-                SELECT s.name, s.country, s.frequency, s.min_date, s.max_date, s.count
-                FROM series s
-                JOIN series_fts fts ON s.id = fts.rowid
-                WHERE series_fts MATCH ?
-            '''
-            # Escape special FTS characters and create query
-            fts_query = query.replace('"', '').replace("'", "")
-            params = [f'"{fts_query}"']
-
-            if freq:
-                sql += ' AND s.frequency = ?'
-                params.append(freq)
-
-            if country:
-                sql += ' AND s.country = ?'
-                params.append(country)
-
-            sql += ' ORDER BY s.count DESC LIMIT ?'
-            params.append(limit)
-        else:
-            # Pure FTS query
-            sql = '''
-                SELECT s.name, s.country, s.frequency, s.min_date, s.max_date, s.count
-                FROM series s
-                JOIN series_fts fts ON s.id = fts.rowid
-                WHERE series_fts MATCH ?
-                ORDER BY s.count DESC
-                LIMIT ?
-            '''
-            fts_query = query.replace('"', '').replace("'", "")
-            params = [f'"{fts_query}"', limit]
-
-        cursor.execute(sql, params)
-        results = cursor.fetchall()
-
-        # If no results, fall back to LIKE
-        if not results:
-            raise sqlite3.OperationalError("No FTS results, falling back to LIKE")
-
-        return [dict(r) for r in results]
-
-    except sqlite3.OperationalError:
-        # Fall back to LIKE query
+        # Try FTS first
+        fts_query = query.replace('"', '').replace("'", "")
         sql = '''
-            SELECT s.name, s.country, s.frequency, s.min_date, s.max_date, s.count
+            SELECT s.name, s.country, s.frequency
             FROM series s
-            WHERE s.name LIKE ?
+            JOIN series_fts fts ON s.id = fts.rowid
+            WHERE series_fts MATCH ?
         '''
-        params = [f'%{query}%']
+        params = [f'"{fts_query}"']
 
         if freq:
             sql += ' AND s.frequency = ?'
             params.append(freq)
-
         if country:
             sql += ' AND s.country = ?'
             params.append(country)
 
-        sql += ' ORDER BY s.count DESC LIMIT ?'
-        params.append(limit)
-
+        sql += ' ORDER BY s.name'
         cursor.execute(sql, params)
-        results = cursor.fetchall()
+        rows = cursor.fetchall()
 
-        return [dict(r) for r in results]
+        if not rows:
+            raise sqlite3.OperationalError("No FTS results")
+
+    except sqlite3.OperationalError:
+        # Fall back to LIKE
+        sql = 'SELECT name, country, frequency FROM series WHERE name LIKE ?'
+        params = [f'%{query}%']
+
+        if freq:
+            sql += ' AND frequency = ?'
+            params.append(freq)
+        if country:
+            sql += ' AND country = ?'
+            params.append(country)
+
+        sql += ' ORDER BY name'
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+
+    # Group by name, collect frequencies
+    seen = {}
+    results = []
+    for row in rows:
+        name = row['name']
+        if name not in seen:
+            seen[name] = {
+                'name': name,
+                'country': row['country'],
+                'frequencies': []
+            }
+            results.append(seen[name])
+        seen[name]['frequencies'].append(row['frequency'])
+
+        if len(results) >= limit and name != rows[-1]['name']:
+            break
+
+    # Sort frequencies consistently
+    for r in results:
+        r['frequencies'] = sorted(set(r['frequencies']))
+
+    return results[:limit]
 
 
-def get_series_data(name: str, start: Optional[str] = None, end: Optional[str] = None) -> Optional[Dict]:
-    """Get data for a single series."""
+def get_series_data(name: str, freq: Optional[str] = None, start: Optional[str] = None, end: Optional[str] = None) -> Optional[Dict]:
+    """
+    Get data for a single series.
+    If freq not specified, defaults to 'm', then falls back to first available.
+    """
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Get series metadata
-    cursor.execute('''
-        SELECT id, name, country, frequency, min_date, max_date, count
-        FROM series WHERE name = ?
-    ''', (name,))
+    # Find the right series row
+    if freq:
+        cursor.execute(
+            'SELECT id, name, country, frequency, min_date, max_date, count FROM series WHERE name = ? AND frequency = ?',
+            (name, freq))
+    else:
+        # Try monthly first, then any
+        cursor.execute(
+            'SELECT id, name, country, frequency, min_date, max_date, count FROM series WHERE name = ? AND frequency = ?',
+            (name, 'm'))
 
     series = cursor.fetchone()
+
+    if not series and not freq:
+        # Fall back to any frequency
+        cursor.execute(
+            'SELECT id, name, country, frequency, min_date, max_date, count FROM series WHERE name = ? ORDER BY frequency',
+            (name,))
+        series = cursor.fetchone()
+
     if not series:
         return None
 
@@ -195,7 +204,6 @@ def get_series_data(name: str, start: Optional[str] = None, end: Optional[str] =
     if start:
         sql += ' AND date >= ?'
         params.append(start)
-
     if end:
         sql += ' AND date <= ?'
         params.append(end)
@@ -217,20 +225,35 @@ def get_series_data(name: str, start: Optional[str] = None, end: Optional[str] =
 
 
 def get_series_info(name: str) -> Optional[Dict]:
-    """Get metadata about a series without fetching the data."""
+    """Get metadata about a series — returns all available frequencies."""
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute('''
         SELECT name, country, frequency, min_date, max_date, count
         FROM series WHERE name = ?
+        ORDER BY frequency
     ''', (name,))
 
-    series = cursor.fetchone()
-    if not series:
+    rows = cursor.fetchall()
+    if not rows:
         return None
 
-    return dict(series)
+    frequencies = {}
+    country = None
+    for row in rows:
+        country = row['country']
+        frequencies[row['frequency']] = {
+            'count': row['count'],
+            'min_date': row['min_date'],
+            'max_date': row['max_date']
+        }
+
+    return {
+        'series_name': name,
+        'country': country,
+        'frequencies': frequencies
+    }
 
 
 def get_stats() -> Dict:
@@ -238,30 +261,24 @@ def get_stats() -> Dict:
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Total series
-    cursor.execute('SELECT COUNT(*) FROM series')
-    total = cursor.fetchone()[0]
+    cursor.execute('SELECT COUNT(DISTINCT name) FROM series')
+    total_names = cursor.fetchone()[0]
 
-    # By country
-    cursor.execute('''
-        SELECT country, COUNT(*) as count
-        FROM series GROUP BY country
-    ''')
+    cursor.execute('SELECT COUNT(*) FROM series')
+    total_series = cursor.fetchone()[0]
+
+    cursor.execute('SELECT country, COUNT(DISTINCT name) as count FROM series GROUP BY country')
     by_country = {row['country']: row['count'] for row in cursor.fetchall()}
 
-    # By frequency
-    cursor.execute('''
-        SELECT frequency, COUNT(*) as count
-        FROM series GROUP BY frequency
-    ''')
+    cursor.execute('SELECT frequency, COUNT(*) as count FROM series GROUP BY frequency')
     by_freq = {row['frequency']: row['count'] for row in cursor.fetchall()}
 
-    # Total data points
     cursor.execute('SELECT COUNT(*) FROM data')
     total_data_points = cursor.fetchone()[0]
 
     return {
-        'total_series': total,
+        'total_series': total_names,
+        'total_series_freq': total_series,
         'total_data_points': total_data_points,
         'by_country': by_country,
         'by_frequency': by_freq

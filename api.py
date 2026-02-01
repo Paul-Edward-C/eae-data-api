@@ -973,6 +973,7 @@ async def search_series_v3(
 @app.get("/v3/series/{series_name:path}")
 async def get_series_v3(
     series_name: str,
+    freq: Optional[str] = Query(None, description="Frequency: m, q, a (defaults to m)"),
     start: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     user: dict = Depends(get_current_user)
@@ -988,7 +989,7 @@ async def get_series_v3(
     rate_info = check_rate_limit(user)
 
     try:
-        data = sda.get_series_data(series_name, start=start, end=end)
+        data = sda.get_series_data(series_name, freq=freq, start=start, end=end)
 
         if data is None:
             raise HTTPException(status_code=404, detail=f"Series not found: {series_name}")
@@ -1043,44 +1044,16 @@ async def get_stats_v3():
 @app.get("/v3/debug")
 async def debug_v3():
     """Debug endpoint for SQLite database status."""
-    import subprocess
-    from pathlib import Path
-
     result = {
         "sqlite_available": SQLITE_AVAILABLE,
         "db_path": str(sda.DB_PATH) if SQLITE_AVAILABLE else None,
         "db_exists": sda.DB_PATH.exists() if SQLITE_AVAILABLE else False,
-        "db_url": sda.DB_URL if SQLITE_AVAILABLE else None,
+        "r2_bucket": sda.R2_BUCKET if SQLITE_AVAILABLE else None,
+        "r2_key": sda.R2_DB_KEY if SQLITE_AVAILABLE else None,
     }
 
-    if SQLITE_AVAILABLE:
-        # Check if curl is available
-        try:
-            curl_result = subprocess.run(['curl', '--version'], capture_output=True, text=True, timeout=5)
-            result["curl_available"] = curl_result.returncode == 0
-        except Exception as e:
-            result["curl_available"] = False
-            result["curl_error"] = str(e)
-
-        # Check if gunzip is available
-        try:
-            gunzip_result = subprocess.run(['gunzip', '--version'], capture_output=True, text=True, timeout=5)
-            result["gunzip_available"] = gunzip_result.returncode == 0
-        except Exception as e:
-            result["gunzip_available"] = False
-            result["gunzip_error"] = str(e)
-
-        # Try to download and see what happens
-        if not sda.DB_PATH.exists():
-            try:
-                import requests
-                response = requests.head(sda.DB_URL, allow_redirects=True, timeout=10)
-                result["url_accessible"] = response.status_code == 200
-                result["url_status"] = response.status_code
-                result["content_length"] = response.headers.get('content-length')
-            except Exception as e:
-                result["url_accessible"] = False
-                result["url_error"] = str(e)
+    if SQLITE_AVAILABLE and sda.DB_PATH.exists():
+        result["db_size_mb"] = round(sda.DB_PATH.stat().st_size / 1024 / 1024, 1)
 
     return result
 
