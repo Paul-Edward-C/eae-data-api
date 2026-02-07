@@ -1,0 +1,4 @@
+{
+    "hidden_patterns": ["S&P PMI"],
+    "comment": "Series containing any of these substrings (case-insensitive) are hidden from public users. Admin API key bypasses this."
+}

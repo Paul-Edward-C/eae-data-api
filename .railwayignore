@@ -1,0 +1,35 @@
+# Cache (column index is 100MB+)
+cache/
+cache/*
+column_index.json
+
+# SQLite database (6GB, downloaded from R2 at runtime)
+data.db
+data.db.gz
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Local development
+.env
+.env.local
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
