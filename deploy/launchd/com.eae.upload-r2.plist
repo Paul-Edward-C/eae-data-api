@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.eae.upload-r2</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/zsh</string>
+        <string>-c</string>
+        <string>echo &quot;=== $(date) ===&quot;; set -a; source /Users/paul/data_api/r2_keys.txt; set +a; exec /Users/paul/opt/anaconda3/bin/python3 /Users/paul/data_api/update_db.py --upload</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/paul/data_api</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>2</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/paul/.local/data_api/upload.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/paul/.local/data_api/upload.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/paul/opt/anaconda3/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>

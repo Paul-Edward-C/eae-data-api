@@ -17,6 +17,123 @@ Data coverage:
 pip install -r requirements.txt
 ```
 
+## Setting up a second Mac (local update pipeline)
+
+Everything below runs on your local machine and keeps Cloudflare R2 (what the Railway API serves) fresh. Do this once per device.
+
+Assumes the second Mac is logged in as user `paul` and has anaconda at `/Users/paul/opt/anaconda3`. If not, edit paths in `deploy/launchd/*.plist` before loading.
+
+### 1. Clone the repo and install deps
+
+```bash
+git clone git@github.com:Paul-Edward-C/eae-data-api.git ~/data_api
+cd ~/data_api
+pip install -r requirements.txt
+```
+
+### 2. Create the local data directory
+
+The SQLite DB lives **outside iCloud** (iCloud doesn't support symlinks and will corrupt the file).
+
+```bash
+mkdir -p ~/.local/data_api
+```
+
+### 3. Copy R2 credentials
+
+`r2_keys.txt` is git-ignored (contains secrets). Copy it from the other Mac via AirDrop/scp to:
+
+```
+~/data_api/r2_keys.txt
+```
+
+Format (two lines):
+```
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+```
+
+### 4. Parquet source files
+
+`update_db.py` reads from `~/Documents/DATA/{cn,jp,kr,tw,region}/{country}_input/`. Because `~/Documents` is iCloud-synced, these should appear automatically on the second Mac — wait until iCloud finishes syncing before the first DB build.
+
+> iCloud sync can produce "Resource deadlock avoided" errors while files are downloading. If you see these, wait and retry.
+
+### 5. Seed the local database
+
+Pick one:
+
+**Fastest** — download the pre-built DB from R2 (~2 GB compressed, ~7 GB decompressed):
+
+```bash
+cd ~/data_api
+set -a; source r2_keys.txt; set +a
+python -c "
+import boto3, gzip, shutil
+from botocore.config import Config
+c = boto3.client('s3',
+    endpoint_url='https://fd2c6c5f2d6d8bc9ca228f83b5671df3.r2.cloudflarestorage.com',
+    aws_access_key_id='$R2_ACCESS_KEY_ID',
+    aws_secret_access_key='$R2_SECRET_ACCESS_KEY',
+    region_name='auto',
+    config=Config(signature_version='s3v4'))
+c.download_file('eae-data-api', 'data.db.gz', '/Users/paul/.local/data_api/data.db.gz')
+with gzip.open('/Users/paul/.local/data_api/data.db.gz','rb') as fi, open('/Users/paul/.local/data_api/data.db','wb') as fo:
+    shutil.copyfileobj(fi, fo)
+print('DB ready')
+"
+```
+
+**Slow** — rebuild locally from parquets (~2–3 hours):
+
+```bash
+python update_db.py --rebuild
+```
+
+### 6. Install the launchd agents
+
+Two agents ship with the repo under `deploy/launchd/`:
+
+| Agent | What it does | Schedule |
+|---|---|---|
+| `com.eae.watch-parquet` | Watches parquet dirs, runs `build_database()` after a 30 s debounce | Always on (KeepAlive) |
+| `com.eae.upload-r2` | Runs `update_db.py --upload` — rebuilds + compresses + pushes to R2 | Daily at 02:00 |
+
+Install:
+
+```bash
+cp ~/data_api/deploy/launchd/com.eae.watch-parquet.plist ~/Library/LaunchAgents/
+cp ~/data_api/deploy/launchd/com.eae.upload-r2.plist     ~/Library/LaunchAgents/
+
+launchctl load ~/Library/LaunchAgents/com.eae.watch-parquet.plist
+launchctl load ~/Library/LaunchAgents/com.eae.upload-r2.plist
+
+launchctl list | grep eae     # both should be listed
+```
+
+### 7. Verify
+
+```bash
+# Watcher: touch a parquet, confirm a rebuild fires within ~30s
+tail -f ~/.local/data_api/watch_parquet.log
+
+# Upload job: trigger it manually once (takes 20–40 min)
+launchctl start com.eae.upload-r2
+tail -f ~/.local/data_api/upload.log
+```
+
+### Everyday ops on this machine
+
+```bash
+launchctl list | grep eae                                              # status
+launchctl start com.eae.upload-r2                                      # force an upload now
+launchctl unload ~/Library/LaunchAgents/com.eae.upload-r2.plist        # disable a job
+launchctl load   ~/Library/LaunchAgents/com.eae.upload-r2.plist        # re-enable
+tail -f ~/.local/data_api/{watch_parquet,upload}.log                   # logs
+```
+
+If you edit a `.plist` on disk, `unload` then `load` for changes to take effect.
+
 ## Updating Data
 
 ### 1. Update source parquet files
