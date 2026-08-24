@@ -618,17 +618,24 @@ async def get_series_info(
 # =============================================================================
 
 @app.get("/packs")
-async def list_chart_packs():
+async def list_chart_packs(user: Optional[dict] = Depends(get_optional_user)):
     """
     The chart-pack catalogue with the tier each one needs.
 
-    Deliberately open: this is the index, not the contents, and the chart site
-    needs it to draw locks on packs the visitor cannot open yet.
+    Open, because this is the index rather than the contents. Authenticate and
+    each entry also carries `accessible` for *you*, which is what lets the
+    coverage matrix unlock the cells a signed-in member has actually paid for
+    instead of showing everyone the same locked table.
     """
+    have = (user or {}).get('tier') if user else None
     items = chart_packs.list_packs()
+    for it in items:
+        it['accessible'] = chart_packs.can_read(it['id'], have)
     return {
         "count": len(items),
         "tiers": chart_packs.TIER_LABEL,
+        "your_tier": have or "anonymous",
+        "accessible": sum(1 for i in items if i['accessible']),
         "packs": items,
     }
 
