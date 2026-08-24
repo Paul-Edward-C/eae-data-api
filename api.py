@@ -617,6 +617,78 @@ async def get_series_info(
 # Chart packs
 # =============================================================================
 
+@app.get("/auth/whoami")
+async def whoami(authorization: Optional[str] = Header(None),
+                 x_api_key: Optional[str] = Header(None)):
+    """
+    Why am I being treated as anonymous?
+
+    Reports what the API resolved for this caller and, when a Ghost token fails,
+    which step rejected it. Booleans only for configuration -- no secrets, no
+    token contents beyond the email it claims, which the caller already knows.
+    """
+    out = {
+        "config": {
+            "ghost_url_set": bool(GHOST_URL),
+            "ghost_admin_key_set": bool(GHOST_ADMIN_KEY),
+            "verify_tokens": GHOST_VERIFY_TOKENS,
+        },
+        "sent": {
+            "authorization": bool(authorization),
+            "x_api_key": bool(x_api_key),
+        },
+        "resolved": None,
+        "stage": None,
+    }
+
+    if x_api_key:
+        info = api_keys.get_key_info(x_api_key) if x_api_key.startswith('eae_') else None
+        if info:
+            out["resolved"] = {"tier": info["tier"], "auth_type": "user_api_key"}
+            out["stage"] = "ok"
+        elif x_api_key in API_KEYS:
+            out["resolved"] = {"tier": "premium", "auth_type": "legacy_api_key"}
+            out["stage"] = "ok"
+        else:
+            out["stage"] = "api_key_not_recognised"
+        return out
+
+    if not authorization or not authorization.startswith('Bearer '):
+        out["stage"] = "no_bearer_token_sent"
+        return out
+
+    token = authorization.replace('Bearer ', '')
+    if not GHOST_URL or not GHOST_ADMIN_KEY:
+        out["stage"] = "ghost_not_configured"      # cannot look anyone up
+        return out
+
+    try:
+        decoded = _decode_ghost_token(token)
+    except Exception as e:
+        out["stage"] = "token_rejected"
+        out["detail"] = type(e).__name__
+        return out
+
+    email = decoded.get('sub') or decoded.get('email')
+    out["claimed_email"] = email
+    if not email:
+        out["stage"] = "token_has_no_subject"
+        return out
+
+    member = _lookup_ghost_member_by_email(email)
+    if not member:
+        out["stage"] = "member_not_found_in_ghost"
+        return out
+
+    out["resolved"] = {
+        "tier": member.get("tier"),
+        "auth_type": "ghost",
+        "ghost_tiers": [t.get("name") for t in (member.get("_raw_tiers") or [])] or None,
+    }
+    out["stage"] = "ok"
+    return out
+
+
 @app.get("/packs")
 async def list_chart_packs(user: Optional[dict] = Depends(get_optional_user)):
     """
