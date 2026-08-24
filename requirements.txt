@@ -1,7 +1,10 @@
 fastapi>=0.100.0
 uvicorn>=0.23.0
 python-multipart>=0.0.6
-PyJWT>=2.8.0
+# [crypto] pulls in `cryptography`, which PyJWT needs for the RS256 verification
+# of Ghost member tokens. Without it every real token fails MissingCryptographyError
+# and each caller resolves as anonymous.
+PyJWT[crypto]>=2.8.0
 requests>=2.31.0
 boto3>=1.28.0
 watchdog>=3.0.0
