@@ -1,0 +1,32 @@
+{
+  "economy": "region",
+  "pack": "macro",
+  "title": "Macro",
+  "sections": [
+    {
+      "id": "headlines",
+      "title": "Headlines",
+      "charts": [
+        "global-ngdp-dec-2019-100",
+        "global-rgdp-sep-2019-100",
+        "asia-rgdp-dec-2019-100",
+        "asia-ngdp-dec-2019-100",
+        "ngdp-per-capita-usd",
+        "ngdp-per-capita-ppp-of-us"
+      ]
+    },
+    {
+      "id": "details",
+      "title": "Details",
+      "charts": [
+        "asia-real-gdp-per-hour-worked",
+        "ngdp-china-and-us",
+        "global-private-consumption-of-gdp",
+        "global-real-services-consumption-dec-2019-100",
+        "region-private-consumption-of-gdp",
+        "asia-manufacturing-of-gdp"
+      ]
+    }
+  ],
+  "missing": []
+}

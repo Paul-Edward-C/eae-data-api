@@ -1,0 +1,42 @@
+{
+  "economy": "jp",
+  "pack": "exports",
+  "title": "Exports",
+  "sections": [
+    {
+      "id": "headlines",
+      "title": "Headlines",
+      "charts": [
+        "japan-exports-and-leading-indicator-yoy-3mma",
+        "japan-exports-and-machine-orders-yoy-3mma",
+        "japan-fuel-imports",
+        "japan-exports-2019-100",
+        "japan-exports-yoy"
+      ]
+    },
+    {
+      "id": "volumes",
+      "title": "Volumes",
+      "charts": [
+        "japan-export-volumes-by-product-index",
+        "japan-export-volumes-by-region-index",
+        "japan-and-advanced-economies-export-volumes-2019-100",
+        "japan-exports-volumes-asia",
+        "japan-exports-volumes-dm"
+      ]
+    },
+    {
+      "id": "details",
+      "title": "Details",
+      "charts": [
+        "japan-exports-semiconductors-usd-bn-sa",
+        "japan-semi-and-auto-exports-usd-bn",
+        "japan-semi-and-auto-exports-jpy-bn-yoy",
+        "japan-exports-by-market-jpy-bn",
+        "japan-exports-by-market-usd-bn",
+        "japan-exports-by-market-annual-of-total"
+      ]
+    }
+  ],
+  "missing": []
+}

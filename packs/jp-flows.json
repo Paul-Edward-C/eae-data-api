@@ -1,0 +1,32 @@
+{
+  "economy": "jp",
+  "pack": "flows",
+  "title": "Flows",
+  "sections": [
+    {
+      "id": "current-account",
+      "title": "Current account",
+      "charts": [
+        "japan-trade-balance-jpy-bn",
+        "japan-current-account-by-component-jpy-bn",
+        "japan-current-account-balance",
+        "japan-current-account-flows-services-jpy-bn",
+        "japan-current-account-travel-jpy-bn",
+        "japan-current-account-balance-annual-of-gdp"
+      ]
+    },
+    {
+      "id": "fdi",
+      "title": "FDI",
+      "charts": [
+        "japan-direct-investment-jpy-bn-3mma",
+        "japan-outbound-fdi-jpy-bn-2",
+        "japan-outbound-fdi-by-destination-annual-usd-bn",
+        "japan-annual-firm-survey-overseas-production-ratio",
+        "japan-annual-firm-survey-overseas-production-ratio-by-type",
+        "japan-promising-countries-for-overseas-business"
+      ]
+    }
+  ],
+  "missing": []
+}

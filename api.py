@@ -12,12 +12,14 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import json
 import jwt
+from jwt.exceptions import PyJWKClientError
 import requests
 import os
 from pathlib import Path
 
 import sqlite_data_access as sda
 import api_keys
+import packs as chart_packs
 
 # =============================================================================
 # Series Visibility Filter (admin vs public)
@@ -137,13 +139,49 @@ request_counts = defaultdict(lambda: {'count': 0, 'reset': datetime.now()})
 # Ghost Members Integration
 # =============================================================================
 
+# Ghost signs member tokens with a key it publishes at
+# /members/.well-known/jwks.json. Verifying against it is what makes the tier
+# meaningful: without it any caller can mint {"sub": "<a premium member>"} and
+# inherit that member's access. Set GHOST_VERIFY_TOKENS=0 to fall back to the old
+# unverified decode only if something is wrong in production — it is not safe.
+GHOST_VERIFY_TOKENS = os.environ.get('GHOST_VERIFY_TOKENS', '1') != '0'
+_jwks_client = None
+
+
+def _get_jwks_client():
+    """Cached JWKS client. PyJWKClient caches fetched keys internally."""
+    global _jwks_client
+    if _jwks_client is None and GHOST_URL:
+        from jwt import PyJWKClient
+        _jwks_client = PyJWKClient(f"{GHOST_URL.rstrip('/')}/members/.well-known/jwks.json")
+    return _jwks_client
+
+
+def _decode_ghost_token(token: str) -> dict:
+    """Decode a Ghost member token, verifying the signature unless disabled."""
+    if not GHOST_VERIFY_TOKENS:
+        return jwt.decode(token, options={"verify_signature": False})
+    client = _get_jwks_client()
+    if client is None:
+        raise jwt.InvalidTokenError('No GHOST_URL configured; cannot verify token')
+    signing_key = client.get_signing_key_from_jwt(token)
+    # Ghost sets aud to the site origin, which varies by deployment, so the
+    # audience is not checked; the signature and expiry are what matter here.
+    return jwt.decode(
+        token,
+        signing_key.key,
+        algorithms=['RS256'],
+        options={'verify_aud': False, 'verify_exp': True},
+    )
+
+
 def get_ghost_member(token: str) -> Optional[dict]:
     """Verify Ghost member token and return member info with tier."""
     if not GHOST_URL or not GHOST_ADMIN_KEY:
         return None
 
     try:
-        decoded = jwt.decode(token, options={"verify_signature": False})
+        decoded = _decode_ghost_token(token)
         email = decoded.get('sub') or decoded.get('email')
 
         if not email:
@@ -156,7 +194,13 @@ def get_ghost_member(token: str) -> Optional[dict]:
 
         return None
 
-    except jwt.DecodeError:
+    except jwt.InvalidTokenError as e:
+        # covers DecodeError, ExpiredSignatureError, InvalidSignatureError
+        print(f"Ghost token rejected: {type(e).__name__}")
+        return None
+    except PyJWKClientError as e:
+        # unknown key id -- a token Ghost did not sign
+        print(f"Ghost token rejected: no matching signing key")
         return None
     except Exception as e:
         print(f"Ghost auth error: {e}")
@@ -567,6 +611,67 @@ async def get_series_info(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# Chart packs
+# =============================================================================
+
+@app.get("/packs")
+async def list_chart_packs():
+    """
+    The chart-pack catalogue with the tier each one needs.
+
+    Deliberately open: this is the index, not the contents, and the chart site
+    needs it to draw locks on packs the visitor cannot open yet.
+    """
+    items = chart_packs.list_packs()
+    return {
+        "count": len(items),
+        "tiers": chart_packs.TIER_LABEL,
+        "packs": items,
+    }
+
+
+@app.get("/packs/{pack_id}")
+async def get_chart_pack(
+    pack_id: str,
+    user: Optional[dict] = Depends(get_optional_user)
+):
+    """
+    One chart pack, gated by tier.
+
+    Public packs need no account. Everything else resolves the caller's Ghost tier
+    and compares it with the pack's requirement, so the lock the site draws and the
+    lock the server enforces are the same rule.
+    """
+    need = chart_packs.required_tier(pack_id)
+    have = (user or {}).get('tier') if user else None
+
+    if not chart_packs.can_read(pack_id, have):
+        # 401 when nobody is signed in, 403 when they are but are too low a tier —
+        # the site shows "sign in" for one and "upgrade" for the other.
+        raise HTTPException(
+            status_code=401 if user is None else 403,
+            detail={
+                "error": "pack_locked",
+                "pack": pack_id,
+                "required_tier": need,
+                "required_label": chart_packs.TIER_LABEL[need],
+                "your_tier": have or "anonymous",
+            },
+        )
+
+    data = chart_packs.load_pack(pack_id)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"No such pack: {pack_id}")
+
+    return {
+        "id": pack_id,
+        "required_tier": need,
+        "your_tier": have or "public",
+        "pack": data,
+    }
 
 
 @app.get("/stats")

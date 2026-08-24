@@ -1,0 +1,44 @@
+{
+  "economy": "kr",
+  "pack": "money",
+  "title": "Money",
+  "sections": [
+    {
+      "id": "money-and-credit",
+      "title": "Money and credit",
+      "charts": [
+        "korea-money-supply-yoy",
+        "korea-household-credit-of-gdp",
+        "korea-household-credit-3m-chg",
+        "korea-m1-as-of-m2",
+        "korea-household-credit-yoy",
+        "korea-household-loans-mom"
+      ]
+    },
+    {
+      "id": "los-and-fof",
+      "title": "LOS and FOF",
+      "charts": [
+        "korea-los-survey-lending-standards",
+        "korea-los-survey-credit-risks",
+        "korea-net-lending-by-sector-quarterly-of-gdp-12mma",
+        "korea-los-survey-bank-credit-risk-by-type",
+        "korea-outlook-for-mortgage-loans",
+        "korea-net-lending-by-sector-annual-of-gdp"
+      ]
+    },
+    {
+      "id": "fiscal",
+      "title": "Fiscal",
+      "charts": [
+        "korea-five-year-fiscal-balance-plan-of-gdp",
+        "korea-fiscal-balance-of-gdp-annual",
+        "korea-fiscal-balance-of-gdp-monthly",
+        "korea-fiscal-revenue-and-expenditure-krw-tn",
+        "korea-fiscal-balance-of-gdp",
+        "korea-public-debt-of-gdp"
+      ]
+    }
+  ],
+  "missing": []
+}

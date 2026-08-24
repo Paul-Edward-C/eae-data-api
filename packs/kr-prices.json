@@ -1,0 +1,55 @@
+{
+  "economy": "kr",
+  "pack": "prices",
+  "title": "Consumer prices",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "korea-cpi-and-bsi-prices",
+        "korea-input-prices-outlook",
+        "korea-cpi-and-import-prices-yoy-3mma",
+        "korea-consumer-price-expectations",
+        "korea-property-price-expectations",
+        "korea-cpi-goods-prices-and-rent-yoy"
+      ]
+    },
+    {
+      "id": "weekly",
+      "title": "Weekly",
+      "charts": [
+        "korea-food-prices-weekly-and-monthly-yoy",
+        "korea-rice-prices-yoy",
+        "korea-vegetable-prices-yoy",
+        "korea-cpi-energy-prices-yoy",
+        "korea-crude-oil-krw-per-litre",
+        "korea-gasoline-krw-per-litre"
+      ]
+    },
+    {
+      "id": "cpi",
+      "title": "CPI",
+      "charts": [
+        "korea-cpi-and-bok-target-yoy",
+        "korea-cpi-mom-annualised-3mma",
+        "korea-cpi-mom-annualised",
+        "korea-cpi-goods-and-services-yoy",
+        "korea-cpi-diffusion",
+        "korea-trimmed-mean-yoy"
+      ]
+    },
+    {
+      "id": "services-cpi",
+      "title": "Services CPI",
+      "charts": [
+        "korea-cpi-all-services-yoy-3mma",
+        "korea-cpi-private-services-excluding-dining-mom-annualised",
+        "korea-cpi-personal-services-by-type-yoy",
+        "korea-cpi-personal-services-by-type-mom-annualised-3mma",
+        "korea-public-services-cpi-and-fiscal-balance-12mma"
+      ]
+    }
+  ],
+  "missing": []
+}

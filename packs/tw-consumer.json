@@ -1,0 +1,32 @@
+{
+  "economy": "tw",
+  "pack": "consumer",
+  "title": "Consumption",
+  "sections": [
+    {
+      "id": "confidence",
+      "title": "Confidence",
+      "charts": [
+        "taiwan-consumer-sentiment",
+        "taiwan-consumer-sentiment-household-national",
+        "taiwan-consumer-sentiment-employment",
+        "taiwan-consumer-sentiment-and-price-expectations",
+        "taiwan-investment-intentions",
+        "taiwan-real-private-consumption-per-capita-2019-100"
+      ]
+    },
+    {
+      "id": "spending",
+      "title": "Spending",
+      "charts": [
+        "taiwan-retail-sales-sa-2019-100",
+        "taiwan-retail-sales-yoy",
+        "taiwan-retail-sales-mom-annualised-3mma",
+        "taiwan-retail-sales-and-food-services-index",
+        "taiwan-retail-sales-volume-index",
+        "taiwan-departures-and-arrivals-th"
+      ]
+    }
+  ],
+  "missing": []
+}

@@ -1,0 +1,20 @@
+{
+  "economy": "kr",
+  "pack": "markets",
+  "title": "Markets",
+  "sections": [
+    {
+      "id": "markets",
+      "title": "Markets",
+      "charts": [
+        "korea-exchange-rate-daily",
+        "korea-krw-history",
+        "korea-krw-neer-v-10-year-yield",
+        "korea-krw-and-exports-yoy",
+        "korea-krw-and-equities-yoy",
+        "korea-ktb-spread-over-ust-daily"
+      ]
+    }
+  ],
+  "missing": []
+}

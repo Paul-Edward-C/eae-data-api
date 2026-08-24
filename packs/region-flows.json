@@ -1,0 +1,30 @@
+{
+  "economy": "region",
+  "pack": "flows",
+  "title": "Flows",
+  "sections": [
+    {
+      "id": "trade-balance",
+      "title": "Trade balance",
+      "charts": [
+        "asia-trade-balance-of-gdp-annual",
+        "asia-trade-balance-of-gdp-3mma",
+        "asia-trade-balance-with-us-monthly-of-gdp-3mma",
+        "asia-trade-balance-with-china-of-gdp-3mma"
+      ]
+    },
+    {
+      "id": "ca-and-bop",
+      "title": "CA and BOP",
+      "charts": [
+        "asia-current-account-of-gdp",
+        "asia-net-foreign-assets-of-gdp",
+        "asia-fx-reserves-usd-bn",
+        "asia-fdi-outflows-of-gdp",
+        "asia-fdi-inflows-of-gdp",
+        "asia-fx-reserves-of-gdp"
+      ]
+    }
+  ],
+  "missing": []
+}

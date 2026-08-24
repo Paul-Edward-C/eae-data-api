@@ -1,0 +1,32 @@
+{
+  "economy": "tw",
+  "pack": "money",
+  "title": "Money",
+  "sections": [
+    {
+      "id": "money-supply",
+      "title": "Money supply",
+      "charts": [
+        "taiwan-money-supply-yoy",
+        "taiwan-money-supply-m1-as-of-m2",
+        "taiwan-change-in-m2-by-component-twd-bn",
+        "taiwan-change-in-reserve-money-by-component-twd-bn",
+        "taiwan-mortgage-loans-mom-annualised",
+        "taiwan-bank-lending-yoy-3mma"
+      ]
+    },
+    {
+      "id": "fiscal",
+      "title": "Fiscal",
+      "charts": [
+        "taiwan-defence-spending-of-gdp",
+        "taiwan-government-spending-yoy",
+        "taiwan-government-spending-twd-bn",
+        "taiwan-fiscal-balance-of-gdp",
+        "taiwan-government-expenditure-of-gdp",
+        "taiwan-government-revenue-of-gdp"
+      ]
+    }
+  ],
+  "missing": []
+}

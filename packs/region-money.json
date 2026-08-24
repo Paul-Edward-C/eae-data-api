@@ -1,0 +1,32 @@
+{
+  "economy": "region",
+  "pack": "money",
+  "title": "Money",
+  "sections": [
+    {
+      "id": "credit",
+      "title": "Credit",
+      "charts": [
+        "global-monetary-base-of-gdp",
+        "region-credit-outstanding-as-of-gdp",
+        "region-credit-gaps",
+        "korea-and-japan-household-credit-outstanding-of-gdp",
+        "region-corporate-credit-outstanding-as-of-gdp",
+        "region-government-credit-outstanding-as-of-gdp"
+      ]
+    },
+    {
+      "id": "fiscal",
+      "title": "Fiscal",
+      "charts": [
+        "region-fiscal-balance-of-gdp",
+        "region-primary-balance-of-gdp",
+        "public-gross-debt-of-gdp",
+        "region-government-expenditure-of-gdp",
+        "region-military-spending-of-gdp",
+        "region-public-net-debt-of-gdp"
+      ]
+    }
+  ],
+  "missing": []
+}

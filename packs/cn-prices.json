@@ -1,0 +1,42 @@
+{
+  "economy": "cn",
+  "pack": "prices",
+  "title": "Consumer prices",
+  "sections": [
+    {
+      "id": "headlines",
+      "title": "Headlines",
+      "charts": [
+        "china-all-economy-prices",
+        "china-real-economy-prices-yoy",
+        "china-core-cpi-yoy",
+        "china-cpi-food-including-alcohol-and-tobacco-food-yoy",
+        "china-asset-prices-yoy-z-score"
+      ]
+    },
+    {
+      "id": "cpi",
+      "title": "CPI",
+      "charts": [
+        "china-cpi-and-pmi-output-prices",
+        "china-cpi-and-ppi-yoy-3mma",
+        "china-cpi-and-daily-food-prices-yoy",
+        "china-pbc-household-survey-cpi-expectations",
+        "china-pbc-household-survey-house-price-expectations"
+      ]
+    },
+    {
+      "id": "property",
+      "title": "Property",
+      "charts": [
+        "china-property-prices",
+        "china-property-prices-and-bond-rates",
+        "china-property-prices-yoy",
+        "china-property-prices-mom-annualised",
+        "china-property-prices-and-mortgage-rates",
+        "china-property-prices-index"
+      ]
+    }
+  ],
+  "missing": []
+}

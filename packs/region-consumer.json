@@ -1,0 +1,20 @@
+{
+  "economy": "region",
+  "pack": "consumer",
+  "title": "Consumption",
+  "sections": [
+    {
+      "id": "consumption",
+      "title": "Consumption",
+      "charts": [
+        "region-visitor-arrivals-2019-100",
+        "region-household-savings-net-of-income",
+        "region-consumer-confidence-z-score",
+        "global-real-household-income-per-capita-2019-100",
+        "region-retail-sales-volume-2019-100",
+        "region-retail-sales-value-2019-100"
+      ]
+    }
+  ],
+  "missing": []
+}

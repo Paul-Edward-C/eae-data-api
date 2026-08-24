@@ -1,0 +1,69 @@
+{
+  "economy": "jp",
+  "pack": "consumer",
+  "title": "Consumption",
+  "sections": [
+    {
+      "id": "monthly",
+      "title": "Monthly",
+      "charts": [
+        "japan-boj-consumer-activity-index-overall",
+        "japan-boj-consumer-activity-index-travel-adjusted",
+        "japan-boj-consumer-activity-index-real-by-type",
+        "japan-retail-sales-sa-2019-100",
+        "japan-retail-sales-yoy",
+        "japan-retail-sales-mom-annualised-3mma"
+      ]
+    },
+    {
+      "id": "quarterly",
+      "title": "Quarterly",
+      "charts": [
+        "japan-nominal-consumption-by-type-2019-100",
+        "japan-real-aggregate-consumption-by-type-2019-100",
+        "japan-consumption-of-goods-2019-100",
+        "japan-real-goods-consumption-by-type-2019-100",
+        "japan-rgdp-household-income-and-consumption-jpy-bn",
+        "japan-household-savings-ratio-annual"
+      ]
+    },
+    {
+      "id": "annual",
+      "title": "Annual",
+      "charts": [
+        "japan-sentiment-consumer-co-survey-headline",
+        "japan-household-confidence",
+        "japan-sentiment-consumer-co-survey-by-age",
+        "japan-sentiment-consumer-co-survey-and-inflation-expectations",
+        "japan-sentiment-consumer-co-survey-purchase-intentions",
+        "japan-sentiment-consumer-co-survey-income"
+      ]
+    },
+    {
+      "id": "annual-cont",
+      "title": "Annual, cont",
+      "charts": [
+        "japan-boj-consumer-survey-economic-conditions",
+        "japan-boj-consumer-survey-household-conditions",
+        "japan-boj-consumer-survey-household-conditions-reasons-over-time",
+        "japan-boj-consumer-survey-incomes",
+        "japan-boj-consumer-survey-spending",
+        "japan-boj-consumer-survey-employment-worries"
+      ]
+    },
+    {
+      "id": "retail-sales",
+      "title": "Retail sales",
+      "charts": [
+        "japan-boj-consumer-survey-economic-conditions-reasons"
+      ]
+    }
+  ],
+  "missing": [
+    "ch_boj_hh_better (Japan, BOJ consumer survey, household conditions better, reasons)",
+    "ch_boj_hh_worse (Japan, BOJ consumer survey, household conditions worse, reasons)",
+    "ch_boj_exp_more (Japan, BOJ consumer survey, spending more)",
+    "ch_boj_exp_less (Japan, BOJ consumer survey, spending less)",
+    "ch_boj_exp_12M (Japan, BOJ consumer survey, 12M spending plans)"
+  ]
+}

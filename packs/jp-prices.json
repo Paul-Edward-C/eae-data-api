@@ -1,0 +1,55 @@
+{
+  "economy": "jp",
+  "pack": "prices",
+  "title": "Consumer prices",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "japan-model-cpi-yoy",
+        "japan-cpi-outlook-japan-boj-tankan",
+        "japan-cpi-and-ppi-yoy",
+        "japan-cpi-and-jpy-yoy",
+        "japan-cpi-and-ppi-services-yoy",
+        "japan-cpi-and-wages-yoy"
+      ]
+    },
+    {
+      "id": "national-cpi",
+      "title": "National CPI",
+      "charts": [
+        "japan-cpi-yoy-long-term",
+        "japan-national-cpi-all-items-mom",
+        "japan-national-cpi-ex-food-and-energy-mom-annualised",
+        "japan-cpi-cntrb-to-yoy-chg-in-cpi-ppts",
+        "japan-cpi-goods-and-services-yoy",
+        "japan-cpi-boj-diffusion"
+      ]
+    },
+    {
+      "id": "tokyo-cpi",
+      "title": "Tokyo CPI",
+      "charts": [
+        "japan-tokyo-cpi-yoy",
+        "japan-tokyo-cpi-ex-food-and-energy-mom-annualised",
+        "japan-tokyo-cpi-trimmed-mean-yoy",
+        "japan-tokyo-cpi-goods-and-services-yoy",
+        "japan-cpi-share-of-increasing-items",
+        "japan-tokyo-cpi-core-goods-and-services-mom-annualised-3mma"
+      ]
+    },
+    {
+      "id": "surveys",
+      "title": "Surveys",
+      "charts": [
+        "japan-boj-consumer-survey-expected-inflation",
+        "japan-boj-consumer-survey-expected-price-rise-di",
+        "japan-boj-consumer-survey-land-price-expectations",
+        "japan-boj-consumer-survey-comments-on-price-rises",
+        "japan-consumer-inflation-expectations-monthly"
+      ]
+    }
+  ],
+  "missing": []
+}

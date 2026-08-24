@@ -1,0 +1,55 @@
+{
+  "economy": "kr",
+  "pack": "surveys",
+  "title": "Surveys",
+  "sections": [
+    {
+      "id": "sentiment-by-industry",
+      "title": "Sentiment by industry",
+      "charts": [
+        "korea-business-sentiment-outlook",
+        "korea-business-sentiment",
+        "korea-business-sentiment-exporters",
+        "korea-business-sentiment-by-sector",
+        "korea-business-sentiment-by-size",
+        "korea-manufacturing-pmi"
+      ]
+    },
+    {
+      "id": "sentiment-by-sector",
+      "title": "Sentiment by sector",
+      "charts": [
+        "korea-business-sentiment-auto-manufacturers",
+        "korea-business-sentiment-heavy-industry",
+        "korea-business-sentiment-hospitality",
+        "korea-business-sentiment-transport-and-utilities",
+        "korea-business-sentiment-construction-real-estate",
+        "korea-business-sentiment-tech-manufacturing"
+      ]
+    },
+    {
+      "id": "sentiment-by-issue",
+      "title": "Sentiment by issue",
+      "charts": [
+        "korea-business-sentiment-sales-and-profits",
+        "korea-business-sentiment-sales",
+        "korea-business-sentiment-profits",
+        "korea-business-sentiment-finances",
+        "korea-business-sentiment-labour"
+      ]
+    },
+    {
+      "id": "mfg-details",
+      "title": "Mfg details",
+      "charts": [
+        "korea-business-sentiment-manufacturing-by-market",
+        "korea-business-sentiment-manufacturing-orders-and-output",
+        "korea-korea-business-sentiment-manufacturing-prices",
+        "korea-business-sentiment-manufacturing-inventories-and-utilisation",
+        "korea-business-sentiment-manufacturing-capacity-and-capex",
+        "korea-business-sentiment-manufacturing-facility-investments"
+      ]
+    }
+  ],
+  "missing": []
+}

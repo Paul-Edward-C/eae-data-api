@@ -1,0 +1,43 @@
+{
+  "economy": "cn",
+  "pack": "industry",
+  "title": "Industry",
+  "sections": [
+    {
+      "id": "outlook-and-fai",
+      "title": "Outlook and FAI",
+      "charts": [
+        "china-construction-activity-and-rates",
+        "china-construction-activity-and-credit-impulse",
+        "china-fixed-asset-investment-yoy",
+        "china-property-prices-and-bond-rates",
+        "china-construction-measures"
+      ]
+    },
+    {
+      "id": "construction",
+      "title": "Construction",
+      "charts": [
+        "china-property-sales-and-starts-yoy-3mma",
+        "china-domestic-excavator-sales-yoy",
+        "china-domestic-excavator-sales",
+        "china-property-indicators-m-sq-m-sa-3mma",
+        "china-residential-cny-yoy-3mma",
+        "china-real-estate-construction-by-type-area-yoy"
+      ]
+    },
+    {
+      "id": "profits",
+      "title": "Profits",
+      "charts": [
+        "china-industrial-sector-profits-yoy",
+        "china-industrial-sector-profits-and-revenue-cny-bn-sa-3mma",
+        "china-profit-margin-3mma",
+        "china-actual-profits-and-pbc-firm-survey",
+        "china-profits-and-ppi-yoy",
+        "china-ip-mom-annualised"
+      ]
+    }
+  ],
+  "missing": []
+}

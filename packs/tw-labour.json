@@ -1,0 +1,32 @@
+{
+  "economy": "tw",
+  "pack": "labour",
+  "title": "Labour",
+  "sections": [
+    {
+      "id": "wages",
+      "title": "Wages",
+      "charts": [
+        "taiwan-regular-earnings-yoy",
+        "taiwan-regular-earnings-by-industry-yoy",
+        "taiwan-regular-earnings-manufacturing-saar-3mma",
+        "taiwan-regular-earnings-industry-and-services-trend",
+        "taiwan-regular-earnings-manufacturing-trend",
+        "taiwan-regular-earnings-services-trend"
+      ]
+    },
+    {
+      "id": "labour-market",
+      "title": "Labour market",
+      "charts": [
+        "taiwan-hours-worked",
+        "taiwan-employment-m-person",
+        "taiwan-employment-by-industry-mn",
+        "taiwan-unemployment-and-participation",
+        "taiwan-youth-unemployment-rate",
+        "taiwan-government-employment-index-2019-100"
+      ]
+    }
+  ],
+  "missing": []
+}

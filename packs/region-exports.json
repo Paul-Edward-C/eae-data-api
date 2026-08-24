@@ -1,0 +1,55 @@
+{
+  "economy": "region",
+  "pack": "exports",
+  "title": "Exports",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "region-exports-and-leading-indicator-usd-yoy",
+        "region-exports-and-usd-yoy",
+        "us-average-tariff-rates",
+        "region-exports-and-leading-indicator-volumes-yoy",
+        "eu-demand-and-asia-exports-to-europe",
+        "china-demand-and-asia-exports-to-china"
+      ]
+    },
+    {
+      "id": "exports-by-country",
+      "title": "Exports by country",
+      "charts": [
+        "region-goods-exports-yoy-3mma",
+        "asia-goods-exports-usd-2019-100",
+        "asia-goods-exports-lcu-2019-100",
+        "asia-goods-exports-volumes-2019-100",
+        "asia-exports-by-individual-country-volume-yoy",
+        "region-exports-of-goods-and-services-volumes-2019-100"
+      ]
+    },
+    {
+      "id": "semi-and-auto",
+      "title": "Semi and auto",
+      "charts": [
+        "region-semiconductor-exports-sa-usd-bn",
+        "exports-excluding-semiconductors-usd-value-2019-100",
+        "region-semiconductor-sector-of-exports",
+        "region-export-volumes-autos-2019-100",
+        "auto-exports-usd-bn-sa"
+      ]
+    },
+    {
+      "id": "market-shares",
+      "title": "Market shares",
+      "charts": [
+        "region-market-share-in-asean",
+        "world-exports-to-china-of-country-total",
+        "asia-market-share-in-china-of-imports-3mma",
+        "region-market-share-in-em",
+        "region-exports-of-global-total",
+        "region-export-volumes-of-global-total"
+      ]
+    }
+  ],
+  "missing": []
+}

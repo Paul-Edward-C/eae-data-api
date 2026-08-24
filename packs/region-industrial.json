@@ -1,0 +1,20 @@
+{
+  "economy": "region",
+  "pack": "industrial",
+  "title": "Industrial prices",
+  "sections": [
+    {
+      "id": "export-prices",
+      "title": "Export prices",
+      "charts": [
+        "region-export-prices-usd-terms",
+        "region-export-prices-local-currency-terms-yoy",
+        "region-export-prices-usd-basis-sa-2019-100",
+        "region-auto-export-prices-contract-currency-basis-2019-100",
+        "world-export-prices-usd-terms-2",
+        "asia-export-prices-monthly-usd-terms-2019-100"
+      ]
+    }
+  ],
+  "missing": []
+}

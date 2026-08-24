@@ -1,0 +1,32 @@
+{
+  "economy": "kr",
+  "pack": "macro",
+  "title": "Macro",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "korea-economic-sentiment-and-annual-gdp",
+        "korea-consumer-confidence-and-pce-yoy-chg",
+        "korea-bsi-and-rates",
+        "korea-bok-policy-probability-model",
+        "korea-bok-loosening-probability",
+        "korea-bok-tightening-probability"
+      ]
+    },
+    {
+      "id": "gdp",
+      "title": "GDP",
+      "charts": [
+        "korea-gdp-yoy",
+        "korea-gdp-qoq",
+        "korea-contribution-to-qoq-gdp-growth-ppts",
+        "korea-ownership-contribution-to-qoq-gdp-growth-ppts",
+        "korea-contribution-to-qoq-chg-in-domestic-demand-ppts",
+        "korea-domestic-demand-yoy"
+      ]
+    }
+  ],
+  "missing": []
+}

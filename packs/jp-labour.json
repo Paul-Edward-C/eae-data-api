@@ -1,0 +1,76 @@
+{
+  "economy": "jp",
+  "pack": "labour",
+  "title": "Labour",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "japan-labour-market-headlines",
+        "japan-labour-force-and-particiption-rate-2019-100",
+        "japan-unemployment-and-tankan-survey",
+        "japan-unemployment-and-bos-survey",
+        "japan-employment-sentiment-surveys"
+      ]
+    },
+    {
+      "id": "supply",
+      "title": "Supply",
+      "charts": [
+        "japan-labour-force-and-population-chg-from-2012-mn",
+        "japan-annual-population-mn",
+        "japan-new-foreign-workers-mn",
+        "japan-labour-market-female-workers",
+        "japan-participation-rate-by-group",
+        "japan-over-time-hours-sa"
+      ]
+    },
+    {
+      "id": "wages-headlines",
+      "title": "Wages, Headlines",
+      "charts": [
+        "japan-total-wages-for-all-workers-by-sample-yoy",
+        "japan-scheduled-wages-for-full-time-workers-by-sample-yoy",
+        "japan-earnings-real-and-nominal-recent-yoy",
+        "japan-earnings-by-type-of-payment-yoy-3mma",
+        "japan-total-cash-earnings-yoy",
+        "japan-earnings-by-type-of-payment-index-sa"
+      ]
+    },
+    {
+      "id": "wages-worker-type",
+      "title": "Wages, Worker type",
+      "charts": [
+        "japan-employment-by-type-of-worker-3mma-1995-100",
+        "japan-scheduled-full-time-worker-pay-index",
+        "japan-scheduled-pay-full-time-employees-mom",
+        "japan-scheduled-part-time-wages-per-hour-index",
+        "japan-scheduled-part-time-wages-per-hour-yoy"
+      ]
+    },
+    {
+      "id": "wages-annual",
+      "title": "Wages, Annual",
+      "charts": [
+        "japan-shunto-outcome-yoy",
+        "japan-shunto-yoy",
+        "japan-shunto-and-scheduled-pay-yoy",
+        "japan-personnel-expenses-share-of-value-added"
+      ]
+    },
+    {
+      "id": "compensation-quarterly",
+      "title": "Compensation, Quarterly",
+      "charts": [
+        "japan-shunto-outcome-yoy",
+        "japan-shunto-yoy",
+        "japan-shunto-and-scheduled-pay-yoy",
+        "japan-personnel-expenses-share-of-value-added"
+      ]
+    }
+  ],
+  "missing": [
+    "ch_job_new_offer (Japan, unemployment and new offers)"
+  ]
+}

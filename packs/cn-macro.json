@@ -1,0 +1,32 @@
+{
+  "economy": "cn",
+  "pack": "macro",
+  "title": "Macro",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "china-gdp-tracker-monthly-yoy",
+        "china-nominal-pmi-and-credit-impulse",
+        "china-caixin-mfg-pmi-and-interest-rates",
+        "china-mfg-pmi-and-fci",
+        "china-goods-and-services-output-yoy",
+        "china-retail-sales-and-ip-official-sa-2024-100"
+      ]
+    },
+    {
+      "id": "gdp",
+      "title": "GDP",
+      "charts": [
+        "china-gdp-yoy",
+        "china-composition-of-gdp-growth",
+        "china-rgdp-construction-and-real-estate-yoy",
+        "china-gdp-qoq",
+        "china-rgdp-consumer-services-sectors-yoy",
+        "china-rgdp-business-services-sectors-yoy"
+      ]
+    }
+  ],
+  "missing": []
+}

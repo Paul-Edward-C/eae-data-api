@@ -1,0 +1,20 @@
+{
+  "economy": "tw",
+  "pack": "industrial",
+  "title": "Industrial prices",
+  "sections": [
+    {
+      "id": "upstream",
+      "title": "Upstream",
+      "charts": [
+        "taiwan-pmi-input-prices",
+        "taiwan-cpi-and-ppi-yoy-3mma",
+        "taiwan-ppi-by-category-yoy",
+        "taiwan-import-prices-by-type-yoy",
+        "taiwan-import-prices-twd-terms-2019-100",
+        "taiwan-import-prices-by-currency-yoy"
+      ]
+    }
+  ],
+  "missing": []
+}

@@ -1,0 +1,20 @@
+{
+  "economy": "region",
+  "pack": "surveys",
+  "title": "Surveys",
+  "sections": [
+    {
+      "id": "sentiment",
+      "title": "Sentiment",
+      "charts": [
+        "global-mfg-sentiment-post-2005-z-score",
+        "region-pmi-post-2015-z-score",
+        "korea-and-taiwan-pmi-post-2015-z-score",
+        "asia-nonmanufacturing-sentiment-post-2015-z-score",
+        "region-non-mfg-sentiment-z-score",
+        "global-non-mfg-sentiment-post-2005-z-score"
+      ]
+    }
+  ],
+  "missing": []
+}

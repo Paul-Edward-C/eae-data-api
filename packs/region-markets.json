@@ -1,0 +1,32 @@
+{
+  "economy": "region",
+  "pack": "markets",
+  "title": "Markets",
+  "sections": [
+    {
+      "id": "fx",
+      "title": "FX",
+      "charts": [
+        "asia-usd-exchange-rates-monthly-2019-100",
+        "asia-daily-neer-since-july-2025",
+        "asia-usd-exchange-rates-since-july-2025-vol-adjusted-100",
+        "china-and-japan-international-price-differentials",
+        "asia-narrow-neer",
+        "asia-narrow-reer"
+      ]
+    },
+    {
+      "id": "rates-and-equity",
+      "title": "Rates and equity",
+      "charts": [
+        "region-equity-markets-2019-100",
+        "region-semi-equities-12m-previously-100",
+        "asia-policy-rates-spread-over-cpi-pppts",
+        "30-year-yields-japan-and-us",
+        "global-policy-rate-momentum",
+        "region-semi-equities-2019-100"
+      ]
+    }
+  ],
+  "missing": []
+}

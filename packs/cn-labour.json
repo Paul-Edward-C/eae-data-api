@@ -1,0 +1,32 @@
+{
+  "economy": "cn",
+  "pack": "labour",
+  "title": "Labour",
+  "sections": [
+    {
+      "id": "sentiment-and-wages",
+      "title": "Sentiment and wages",
+      "charts": [
+        "china-pbc-depositor-survey-employment",
+        "china-pmi-employment",
+        "china-pbc-depositor-survey-current-employment",
+        "china-household-income-wages-yoy",
+        "china-household-income-wages-annual-yoy",
+        "china-migrant-worker-wages-yoy"
+      ]
+    },
+    {
+      "id": "supply-and-demand",
+      "title": "Supply and demand",
+      "charts": [
+        "china-unemployment-rate",
+        "china-population-mn",
+        "china-population-aged-15-24-mn",
+        "china-unemployment-rate-by-age",
+        "china-population-aged-80-mn",
+        "china-adult-population-of-total"
+      ]
+    }
+  ],
+  "missing": []
+}

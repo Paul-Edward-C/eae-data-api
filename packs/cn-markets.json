@@ -1,0 +1,65 @@
+{
+  "economy": "cn",
+  "pack": "markets",
+  "title": "Markets",
+  "sections": [
+    {
+      "id": "policy-and-actual-rates",
+      "title": "Policy and actual rates",
+      "charts": [
+        "china-short-end-rate-corridor-2",
+        "china-policy-rates",
+        "china-actual-lending-rates",
+        "china-actual-lending-rates-and-7d-policy-rate",
+        "china-actual-mortgage-rates-and-5-yr-cgb"
+      ]
+    },
+    {
+      "id": "cgb",
+      "title": "CGB",
+      "charts": [
+        "china-monthly-cgb-yields",
+        "china-cgb-yields-3m-change",
+        "china-cgb-curve-monthly",
+        "china-corporate-yields",
+        "china-corporate-5-yr-spreads"
+      ]
+    },
+    {
+      "id": "money-market",
+      "title": "Money market",
+      "charts": [
+        "china-money-market-7d-benchmark",
+        "china-money-market-banks-and-non-banks",
+        "china-r007-dr007-spread",
+        "china-money-market-7d-benchmark-2",
+        "china-money-market-banks-and-non-banks-daily",
+        "china-r007-dr007-spread-daily"
+      ]
+    },
+    {
+      "id": "fx",
+      "title": "FX",
+      "charts": [
+        "china-cny",
+        "china-bis-cny-basket-daily",
+        "china-cnh-premium-v-cny-ppts",
+        "china-cny-and-us-rate-spread-monthly",
+        "china-cny-baskets"
+      ]
+    },
+    {
+      "id": "equities",
+      "title": "Equities",
+      "charts": [
+        "china-benchmark-indices-2",
+        "china-offshore-real-estate-equities-relative-to-index",
+        "china-policy-sensitive-sectors-offshore-relative-to-index",
+        "china-bank-equities",
+        "china-real-estate-equities-and-debt-daily",
+        "china-policy-sensitive-sectors-offshore"
+      ]
+    }
+  ],
+  "missing": []
+}

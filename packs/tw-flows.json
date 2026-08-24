@@ -1,0 +1,67 @@
+{
+  "economy": "tw",
+  "pack": "flows",
+  "title": "Flows",
+  "sections": [
+    {
+      "id": "trade-and-fx-reserves",
+      "title": "Trade and fx reserves",
+      "charts": [
+        "taiwan-trade-balance-3mma",
+        "taiwan-trade-balance",
+        "taiwan-exporter-proceeds-converted-to-twd-of-total",
+        "taiwan-financial-services-balance-of-gdp",
+        "taiwan-fx-reserves-mom-change-usd-bn",
+        "taiwan-fx-reserves-and-trade-balance-mom-change-usd-bn"
+      ]
+    },
+    {
+      "id": "quarterly-bop",
+      "title": "Quarterly BOP",
+      "charts": [
+        "taiwan-current-account-balance-of-gdp",
+        "taiwan-current-account-goods-usd-bn",
+        "taiwan-current-account-composition-of-gdp",
+        "taiwan-capital-inflows-and-outflows-usd-bn",
+        "taiwan-recycling-of-current-account-of-gdp",
+        "taiwan-balance-of-payments-usd-bn"
+      ]
+    },
+    {
+      "id": "lifers",
+      "title": "Lifers",
+      "charts": [
+        "taiwan-lifers-foreign-assets",
+        "taiwan-formosa-bonds-outstanding-usd-bn",
+        "taiwan-bond-and-overseas-equity-etfs-nav-usd-bn",
+        "taiwan-cathay-life-hedging-ratio",
+        "taiwan-lifers-balance-sheet-items-of-total"
+      ]
+    },
+    {
+      "id": "annual-bop",
+      "title": "Annual BOP",
+      "charts": [
+        "taiwan-current-account-annual-of-gdp",
+        "taiwan-current-account-by-component-annual-of-gdp",
+        "taiwan-recycling-of-the-current-account-usd-bn",
+        "taiwan-recycling-of-the-current-account-main-drivers-usd-bn",
+        "taiwan-corporate-capital-flows-usd-bn",
+        "taiwan-return-on-overseas-debt-assets"
+      ]
+    },
+    {
+      "id": "fdi",
+      "title": "FDI",
+      "charts": [
+        "taiwan-outbound-fdi-china-and-row-usd-bn-12mma",
+        "taiwan-outbound-fdi-by-destination-usd-bn-12mma",
+        "taiwan-outbound-fdi-china-and-us-usd-bn-12mma",
+        "taiwan-outbound-fdi-by-major-region-annual-usd-bn",
+        "taiwan-outbound-fdi-by-region-of-gdp",
+        "taiwan-outbound-fdi-by-region-usd-bn"
+      ]
+    }
+  ],
+  "missing": []
+}

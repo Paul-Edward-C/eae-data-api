@@ -1,0 +1,54 @@
+{
+  "economy": "tw",
+  "pack": "exports",
+  "title": "Exports",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "taiwan-exports-and-monitoring-indicator",
+        "taiwan-exports-and-equities-yoy",
+        "taiwan-exports-and-leading-indicator-yoy-3mma",
+        "taiwan-exports-and-official-export-orders-yoy",
+        "taiwan-exports-and-pmi-export-orders"
+      ]
+    },
+    {
+      "id": "foreign-trade",
+      "title": "Foreign trade",
+      "charts": [
+        "taiwan-foreign-trade-sa-usd-bn",
+        "taiwan-imports-sa-usd-m",
+        "taiwan-imports-by-type-usd-bn",
+        "taiwan-foreign-trade-volume-2019-100",
+        "taiwan-semi-mfg-equipment-imports-usd-bn"
+      ]
+    },
+    {
+      "id": "exports",
+      "title": "Exports",
+      "charts": [
+        "taiwan-semiconductor-exports-sa-usd-bn",
+        "taiwan-exports-asia-usd-bn",
+        "taiwan-exports-rest-of-world-usd-bn",
+        "taiwan-semi-exports-and-tsmc-sales-sa-usd-bn-2019-100",
+        "taiwan-exports-china-usd-bn",
+        "taiwan-exports-by-market-of-total"
+      ]
+    },
+    {
+      "id": "export-orders",
+      "title": "Export orders",
+      "charts": [
+        "taiwan-export-orders-yoy",
+        "taiwan-export-orders-usd-bn-2019-100",
+        "taiwan-export-orders-overseas-production-ratio",
+        "taiwan-export-orders-by-industry-yoy-3mma",
+        "taiwan-annual-export-orders-by-country-usd-bn",
+        "taiwan-export-orders-country-yoy"
+      ]
+    }
+  ],
+  "missing": []
+}

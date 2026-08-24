@@ -1,0 +1,67 @@
+{
+  "economy": "cn",
+  "pack": "industrial",
+  "title": "Industrial prices",
+  "sections": [
+    {
+      "id": "daily",
+      "title": "Daily",
+      "charts": [
+        "china-wholesale-food-prices-daily",
+        "china-10d-industrial-prices-index",
+        "china-10d-agricultural-prices-index",
+        "china-10d-metals-price-index",
+        "china-shanghai-containerised-freight-index",
+        "china-10d-building-material-and-industrial-good-prices-index"
+      ]
+    },
+    {
+      "id": "surveys",
+      "title": "Surveys",
+      "charts": [
+        "china-pmi-input-prices",
+        "china-pmi-output-prices",
+        "china-non-mfg-pmi-output-prices",
+        "china-ckgsb-survey-prices",
+        "china-pbc-corporate-survey-prices",
+        "china-pbc-depositor-survey-expectations-for-price-rises"
+      ]
+    },
+    {
+      "id": "import-and-export-px",
+      "title": "Import and export px",
+      "charts": [
+        "china-pmi-input-prices",
+        "china-pmi-output-prices",
+        "china-non-mfg-pmi-output-prices",
+        "china-ckgsb-survey-prices",
+        "china-pbc-corporate-survey-prices",
+        "china-pbc-depositor-survey-expectations-for-price-rises"
+      ]
+    },
+    {
+      "id": "ppi-headlines",
+      "title": "PPI headlines",
+      "charts": [
+        "china-ppi-and-pmi-input-prices-2",
+        "china-ppi-and-dxy-yoy",
+        "china-ppi-and-global-commodity-prices-yoy",
+        "china-ppi-and-construction-activity-yoy",
+        "china-ppi-and-10d-industrial-prices-yoy",
+        "china-ppi-and-pmi-input-prices"
+      ]
+    },
+    {
+      "id": "ppi-details",
+      "title": "PPI details",
+      "charts": [
+        "china-ppi-yoy",
+        "china-ppi-components-yoy",
+        "china-ppi-industrial-goods-yoy",
+        "china-ppi-mom-annualised",
+        "china-ppi"
+      ]
+    }
+  ],
+  "missing": []
+}

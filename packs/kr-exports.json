@@ -1,0 +1,79 @@
+{
+  "economy": "kr",
+  "pack": "exports",
+  "title": "Exports",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "korea-exports-and-equities-yoy",
+        "korea-full-month-and-20d-exports-yoy",
+        "korea-exports-and-leading-indicator-usd-yoy",
+        "korea-full-month-exports-and-exporter-sentiment",
+        "korea-20d-exports-and-leading-indicator-yoy-3mma",
+        "korea-exports-partial-and-full-month-yoy-3mma"
+      ]
+    },
+    {
+      "id": "headlines",
+      "title": "Headlines",
+      "charts": [
+        "korea-full-month-foreign-trade-csa-usd-bn",
+        "korea-full-month-foreign-trade-csa-usd-bn-2",
+        "korea-full-month-exports-csa-2019-100",
+        "korea-import-values-and-volumes",
+        "korea-imports-usd-bn-csa",
+        "korea-trade-balance-usd-bn-csa"
+      ]
+    },
+    {
+      "id": "fm",
+      "title": "FM",
+      "charts": [
+        "korea-exports-by-country-group-usd-bn",
+        "korea-exports-by-product-group-of-total",
+        "korea-exports-per-day-by-country-group-usd-bn-3mma",
+        "korea-exports-per-day-by-product-group-usd-bn",
+        "korea-exports-per-day-dm-usd-bn",
+        "korea-exports-per-day-by-country-group-usd-bn"
+      ]
+    },
+    {
+      "id": "fm-details",
+      "title": "FM, details",
+      "charts": [
+        "korea-full-month-exports-yoy-2",
+        "korea-exports-value-and-volume-yoy-3mma",
+        "korea-full-month-exports-by-product-yoy",
+        "korea-semiconductor-exports-usd-bn-sca",
+        "korea-full-month-exports-asia-usd-bn",
+        "korea-semiconductor-exports-of-total"
+      ]
+    },
+    {
+      "id": "20d",
+      "title": "20D",
+      "charts": [
+        "korea-20d-exports-yoy",
+        "korea-20d-exports-per-day-usd-bn",
+        "korea-20d-exports-by-country-group-yoy-3mma",
+        "korea-20d-exports-by-product-group-yoy"
+      ]
+    },
+    {
+      "id": "10d",
+      "title": "10D",
+      "charts": [
+        "korea-10d-exports-yoy",
+        "korea-10d-exports-per-day-yoy",
+        "korea-10d-trade-per-day-usd-bn",
+        "korea-10d-exports-semiconductors-csa-usd-bn",
+        "korea-10d-exports-per-day-semi-and-other-usd-bn"
+      ]
+    }
+  ],
+  "missing": [
+    "ch_x20_m_cn"
+  ]
+}

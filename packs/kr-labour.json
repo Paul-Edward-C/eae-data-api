@@ -1,0 +1,45 @@
+{
+  "economy": "kr",
+  "pack": "labour",
+  "title": "Labour",
+  "sections": [
+    {
+      "id": "labour-market",
+      "title": "Labour market",
+      "charts": [
+        "korea-labour-force-and-employment-2019-100",
+        "korea-unemployment-and-participation",
+        "korea-employment-by-age-index-2019-100",
+        "korea-employment-mom",
+        "korea-employment-by-main-industry-index-2019-100",
+        "korea-state-and-private-employment-index-2019-100"
+      ]
+    },
+    {
+      "id": "jolts",
+      "title": "JOLTS",
+      "charts": [
+        "korea-vacancy-rate",
+        "korea-labour-market-tightness",
+        "korea-quits-rate",
+        "korea-hiring-of-temporary-staff",
+        "korea-job-filling-rate"
+      ]
+    },
+    {
+      "id": "wages",
+      "title": "Wages",
+      "charts": [
+        "korea-wages-yoy",
+        "korea-wages-2020-100",
+        "korea-minimum-wage-yoy",
+        "korea-employee-compensation-per-worker-yoy",
+        "korea-regular-wages-and-vacancy-rate",
+        "korea-private-sector-employment-and-business-sentiment-2"
+      ]
+    }
+  ],
+  "missing": [
+    "ch_openings_jobs"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "economy": "kr",
+  "pack": "industry",
+  "title": "Industry",
+  "sections": [
+    {
+      "id": "capex-and-construction",
+      "title": "Capex and construction",
+      "charts": [
+        "korea-capex-2019-100",
+        "korea-equipment-investment-index-2019-100",
+        "korea-ict-and-total-investment-2019-100-3mma",
+        "korea-ict-investment-index-2019-100",
+        "korea-construction-orders-krw-bn-sa",
+        "korea-construction-indicators-2019-100"
+      ]
+    },
+    {
+      "id": "ip",
+      "title": "IP",
+      "charts": [
+        "korea-industrial-production-index",
+        "korea-inventory-shipment-ratio",
+        "korea-production-and-inventory-ratio",
+        "korea-inventory-ratio-and-ip-semi",
+        "korea-inventory-ratio-and-ip-autos-2"
+      ]
+    },
+    {
+      "id": "services-and-profits",
+      "title": "Services and profits",
+      "charts": [
+        "korea-manufacturing-and-services-production-yoy-3mma",
+        "korea-services-activity-index-2019-100",
+        "korea-services-value-added-by-sector-ppts",
+        "korea-all-industry-profit-margin",
+        "korea-transport-equipment-profit-margin-sa",
+        "korea-profit-margins-by-industry"
+      ]
+    }
+  ],
+  "missing": [
+    "ch_ip_mfg_contribution (Korea, Contribution to YoY chg in manufacturing IP, ppts)"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "economy": "tw",
+  "pack": "industry",
+  "title": "Industry",
+  "sections": [
+    {
+      "id": "ip-headlines",
+      "title": "IP headlines",
+      "charts": [
+        "taiwan-capex-and-capital-goods-imports-yoy",
+        "taiwan-semi-mfg-equipment-imports-usd-bn",
+        "taiwan-ip-and-pmi-3mma",
+        "taiwan-industrial-production-index",
+        "taiwan-industrial-production-mom-annualised",
+        "taiwan-industrial-production-yoy"
+      ]
+    },
+    {
+      "id": "ip-details",
+      "title": "IP details",
+      "charts": [
+        "taiwan-tech-industry-production-value-and-volume-yoy",
+        "taiwan-tsmc-sales-and-total-foundry-sales-twd-2019-100",
+        "taiwan-contribution-to-yoy-chg-in-manufacturing-output-ppts",
+        "taiwan-semi-production-value-yoy",
+        "taiwan-production-and-inventory-ratio-tech",
+        "taiwan-inventory-shipment-ratio-manufacturing"
+      ]
+    },
+    {
+      "id": "property",
+      "title": "Property",
+      "charts": [
+        "taiwan-property-transactions-unit-th-3mma",
+        "taiwan-property-sales-six-city-total-unit-th-3mma",
+        "taiwan-residential-floor-area-started-sqm-mn-3mma",
+        "taiwan-residential-floor-area-completed-unit-3mma",
+        "taiwan-residential-area-under-construction-sqm-mn-3mma",
+        "taiwan-manufacturing-fdi-major-areas-usd-bn-12mma"
+      ]
+    }
+  ],
+  "missing": []
+}

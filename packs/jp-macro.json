@@ -1,0 +1,56 @@
+{
+  "economy": "jp",
+  "pack": "macro",
+  "title": "Macro",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "japan-gdp-ew-outlook",
+        "japan-gdp-boj-tankan-outlook",
+        "japan-bsi-and-gdp",
+        "japan-ngdp-expenditure-outlook-equities-2019-100",
+        "japan-domestic-demand-and-bank-sentiment",
+        "japan-cabinet-net-approval"
+      ]
+    },
+    {
+      "id": "gdp-headlines",
+      "title": "GDP headlines",
+      "charts": [
+        "japan-gdp-yoy",
+        "japan-real-gdp-jpy-tn",
+        "japan-gdp-jpy-qoq",
+        "japan-rgdp-domestic-demand-and-exports-2019-100",
+        "japan-domestic-and-external-cntrb-to-qoq-chg-in-rgdp",
+        "japan-boj-rgdp-forecast"
+      ]
+    },
+    {
+      "id": "gdp-growth",
+      "title": "GDP growth",
+      "charts": [
+        "japan-rgdp-private-sector-consumption-and-investment-2019-100",
+        "japan-contribution-to-yoy-chg-in-rgdp-ownership",
+        "japan-contribution-to-yoy-chg-in-rgdp-expenditure",
+        "japan-contribution-to-qoq-chg-in-rgdp-expenditure",
+        "japan-rgdp-exports-by-type-2019-100",
+        "japan-rgdp-external-sector-2019-100"
+      ]
+    },
+    {
+      "id": "structure",
+      "title": "Structure",
+      "charts": [
+        "japan-output-gap",
+        "japan-contribution-to-potential-growth-in-rgdp",
+        "japan-natural-rate-of-interest",
+        "japan-nominal-rates-and-gdp",
+        "japan-terms-of-trade-impact-on-gni-2",
+        "japan-corporates-labour-share-by-type-of-value-added"
+      ]
+    }
+  ],
+  "missing": []
+}

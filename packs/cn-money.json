@@ -1,0 +1,80 @@
+{
+  "economy": "cn",
+  "pack": "money",
+  "title": "Money",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "china-monetary-policy-reaction-function",
+        "china-household-liquidity-preference-and-inflation",
+        "china-credit-impulse-and-rates",
+        "china-m1-and-afre-total-impulse",
+        "china-credit-impulse-and-fci",
+        "china-pbc-model-risk-of-loosening"
+      ]
+    },
+    {
+      "id": "credit-headlines",
+      "title": "Credit, Headlines",
+      "charts": [
+        "china-aggregate-credit-mom",
+        "china-credit-flow-cny-bn",
+        "china-aggregate-financing-outstanding-of-gdp",
+        "china-m1-yoy",
+        "china-change-in-afre-total-impulse-12m-chg",
+        "china-12m-credit-flow-public-and-other-cny-tn"
+      ]
+    },
+    {
+      "id": "credit-details",
+      "title": "Credit, Details",
+      "charts": [
+        "china-12m-chg-in-credit-outstanding-by-type-cny-tn",
+        "china-traditional-bank-loans-3m-chg",
+        "china-credit-components-3m-chg",
+        "china-1m-chg-in-credit-outstanding-by-type-cny-tn",
+        "china-entrusted-and-trust-loans-3m-chg",
+        "china-banker-acceptances-3m-chg"
+      ]
+    },
+    {
+      "id": "mortgages-and-securities",
+      "title": "Mortgages and securities",
+      "charts": [
+        "china-household-mlt-loan-impulse-and-interest-rates",
+        "china-household-mlt-loans-mom-annualised",
+        "china-government-bonds-new-issuance-cny-bn-sa",
+        "china-government-bonds-new-issuance-yoy-chg-cny-bn",
+        "china-corporate-bond-issuance-and-interest-rates",
+        "china-equity-issuance-cny-bn"
+      ]
+    },
+    {
+      "id": "deposits",
+      "title": "Deposits",
+      "charts": [
+        "china-of-deposits-held-on-demand",
+        "china-liquidity-preference-yoy-chg",
+        "china-government-deposits-of-gdp",
+        "china-deposits-yoy",
+        "china-households-of-deposits-held-on-demand",
+        "china-pbc-survey-allocation-of-financial-savings"
+      ]
+    },
+    {
+      "id": "pbc-balance-sheet",
+      "title": "PBC balance sheet",
+      "charts": [
+        "china-pbc-assets-by-type-cny-tn-sa",
+        "china-pbc-assets-yoy",
+        "china-pbc-lending-to-financial-sector-cny-tn",
+        "china-pbc-assets-headline-and-adjusted-of-gdp",
+        "china-reserve-money-yoy",
+        "china-pbc-liquidity-tools-balance-outstanding-cny-tn-2"
+      ]
+    }
+  ],
+  "missing": []
+}

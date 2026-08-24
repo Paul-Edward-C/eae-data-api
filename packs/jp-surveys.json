@@ -1,0 +1,66 @@
+{
+  "economy": "jp",
+  "pack": "surveys",
+  "title": "Surveys",
+  "sections": [
+    {
+      "id": "ew-survey",
+      "title": "EW survey",
+      "charts": [
+        "japan-economy-watchers-overall",
+        "japan-economy-watchers-corporate",
+        "japan-economy-watchers-household",
+        "japan-economy-watchers-household-services-and-food",
+        "japan-economy-watchers-household-retail-and-housing",
+        "japan-economy-watchers-industry-recent"
+      ]
+    },
+    {
+      "id": "tankan",
+      "title": "Tankan",
+      "charts": [
+        "japan-tankan-business-conditions",
+        "japan-tankan-business-conditions-by-sector",
+        "japan-tankan-employment-and-capacity",
+        "japan-tankan-output-prices",
+        "japan-tankan-input-prices",
+        "japan-tankan-large-nonmanufacturing-firms-prices"
+      ]
+    },
+    {
+      "id": "tankan-cont",
+      "title": "Tankan, cont",
+      "charts": [
+        "japan-tankan-demand-conditions",
+        "japan-tankan-large-firms-business-conditions-services",
+        "japan-tankan-lending-attitude",
+        "japan-tankan-overseas-demand-conditions",
+        "japan-tankan-lending-attitude-small-firms",
+        "japan-tankan-business-conditions-actual-v-previous-forecast"
+      ]
+    },
+    {
+      "id": "bsi",
+      "title": "BSI",
+      "charts": [
+        "japan-bos-business-conditions",
+        "japan-bos-business-conditions-large-firms",
+        "japan-bos-domestic-economy",
+        "japan-bos-employment",
+        "japan-bos-capex",
+        "japan-bos-capex-large-firms-3m-outlook"
+      ]
+    },
+    {
+      "id": "annual-surveys",
+      "title": "Annual surveys",
+      "charts": [
+        "japan-annual-firm-survey-ngdp-outlook-yoy",
+        "japan-annual-firm-survey-rgdp-outlook-yoy",
+        "japan-annual-firm-survey-three-year-capex-outlook-yoy",
+        "japan-annual-firm-survey-three-year-hiring-outlook-yoy"
+      ]
+    }
+  ],
+  "missing": []
+}

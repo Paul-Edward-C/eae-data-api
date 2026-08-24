@@ -1,0 +1,32 @@
+{
+  "economy": "kr",
+  "pack": "consumer",
+  "title": "Consumption",
+  "sections": [
+    {
+      "id": "consumer-confidence",
+      "title": "Consumer confidence",
+      "charts": [
+        "korea-sentiment-consumer-bok-csi-headline",
+        "korea-sentiment-consumer-bok-csi-by-age",
+        "korea-sentiment-consumer-bok-csi-details",
+        "korea-sentiment-consumer-bok-csi-spending-intentions",
+        "korea-sentiment-consumer-bok-csi-employment-and-income",
+        "korea-sentiment-consumer-bok-csi-and-domestic-business-sentiment"
+      ]
+    },
+    {
+      "id": "consumer-spending",
+      "title": "Consumer spending",
+      "charts": [
+        "korea-retail-sales-sa-2019-100",
+        "korea-retail-sales-yoy",
+        "korea-retail-sales-mom-annualised-3mma",
+        "korea-food-service-sales-nominal-and-real-index",
+        "korea-ngdp-private-consumption-krw-bn-2019-100",
+        "korea-rgdp-private-consumption-krw-bn-2019-100"
+      ]
+    }
+  ],
+  "missing": []
+}

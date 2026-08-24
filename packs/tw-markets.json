@@ -1,0 +1,32 @@
+{
+  "economy": "tw",
+  "pack": "markets",
+  "title": "Markets",
+  "sections": [
+    {
+      "id": "rates",
+      "title": "Rates",
+      "charts": [
+        "taiwan-policy-rates",
+        "taiwan-cbc-policy-rate-and-fed-funds",
+        "taiwan-cbc-policy-probability-model",
+        "taiwan-cbc-tightening-probability",
+        "taiwan-cbc-loosening-probability",
+        "taiwan-cbc-policy-prediction"
+      ]
+    },
+    {
+      "id": "fx",
+      "title": "FX",
+      "charts": [
+        "taiwan-exchange-rate-last-12m",
+        "taiwan-usdtwd-2",
+        "taiwan-twd-baskets",
+        "taiwan-neer-dynamic-stability-band",
+        "taiwan-interest-rates",
+        "taiwan-yields-and-inflation"
+      ]
+    }
+  ],
+  "missing": []
+}

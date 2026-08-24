@@ -1,0 +1,44 @@
+{
+  "economy": "kr",
+  "pack": "flows",
+  "title": "Flows",
+  "sections": [
+    {
+      "id": "current-account",
+      "title": "Current account",
+      "charts": [
+        "korea-trade-balance-csa",
+        "korea-current-account-quarterly",
+        "korea-current-account-balance-by-component-usd-bn",
+        "korea-current-account-goods-usd-bn",
+        "korea-current-account-services-usd-bn",
+        "korea-current-account-travel-usd-bn"
+      ]
+    },
+    {
+      "id": "flows",
+      "title": "Flows",
+      "charts": [
+        "korea-outbound-fdi-by-destination-usd-bn-12mma",
+        "korea-net-outflows-by-type-usd-bn",
+        "korea-overseas-portfolio-investment-usd-bn",
+        "korea-portfolio-investment-flows-usd-bn",
+        "korea-overseas-investment-by-investor-monthly-usd-bn",
+        "korea-fixed-income-flows-usd-bn"
+      ]
+    },
+    {
+      "id": "annual",
+      "title": "Annual",
+      "charts": [
+        "korea-current-account-annual-of-gdp",
+        "korea-outbound-fdi-by-destination-annual-usd-bn",
+        "korea-nps-planned-foreign-investments-of-total",
+        "korea-direct-investment-flows-usd-bn",
+        "korea-portfolio-investment-flows-usd-bn-annual",
+        "korea-overseas-investment-by-investor-annual-usd-bn"
+      ]
+    }
+  ],
+  "missing": []
+}

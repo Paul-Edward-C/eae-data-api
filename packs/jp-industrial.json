@@ -1,0 +1,91 @@
+{
+  "economy": "jp",
+  "pack": "industrial",
+  "title": "Industrial prices",
+  "sections": [
+    {
+      "id": "surveys",
+      "title": "Surveys",
+      "charts": [
+        "japan-tankan-inflation-outlook-general-prices",
+        "japan-tankan-inflation-outlook",
+        "japan-tankan-inflation-outlook-output-prices",
+        "japan-tankan-survey-services-output-prices",
+        "japan-tankan-output-and-input-prices-manufacturing",
+        "japan-tankan-output-and-input-prices-nonmanufacturing"
+      ]
+    },
+    {
+      "id": "weekly",
+      "title": "Weekly",
+      "charts": [
+        "japan-energy-prices-jpy-yoy",
+        "japan-pump-prices-jpy",
+        "japan-crude-oil-prices-jpy",
+        "japan-weekly-retail-price-index-yoy",
+        "japan-weekly-unit-value-price-yoy",
+        "japan-weekly-rice-price-jpy-per-5kg-bag"
+      ]
+    },
+    {
+      "id": "tot",
+      "title": "TOT",
+      "charts": [
+        "japan-tot-annual-2019-100",
+        "japan-tot-monthly-2019-100",
+        "japan-contribution-to-yoy-change-in-tot-ppts",
+        "japan-import-and-export-prices-annual-2019-100",
+        "japan-foreign-trade-prices-contract-ccy-basis-2019-100",
+        "japan-foreign-trade-prices-usd-basis-2019-100"
+      ]
+    },
+    {
+      "id": "export-prices",
+      "title": "Export prices",
+      "charts": [
+        "japan-export-prices-by-composition-yoy",
+        "japan-export-prices-monthly-2019-100",
+        "japan-export-prices-by-currency-2019-100",
+        "japan-car-exports-to-the-us-unit-price-2021-100",
+        "japan-auto-export-prices-contract-ccy-basis-index"
+      ]
+    },
+    {
+      "id": "import-prices",
+      "title": "Import prices",
+      "charts": [
+        "japan-import-price-composition-yoy",
+        "japan-import-prices-monthly-2019-100",
+        "japan-import-and-global-prices-jpy-yoy",
+        "japan-import-prices-by-currency-yoy",
+        "japan-import-prices-by-currency-2019-100",
+        "japan-import-prices-and-usd-yoy"
+      ]
+    },
+    {
+      "id": "goods-ppi",
+      "title": "Goods PPI",
+      "charts": [
+        "japan-ppi-yoy",
+        "japan-ppi-index-year-end-2019-100",
+        "japan-ppi-and-import-prices-yoy",
+        "japan-ppi-and-global-prices-yoy",
+        "japan-ppi-gasoline-and-global-oil-prices-2019-100",
+        "japan-ppi-and-import-prices-2019-100"
+      ]
+    },
+    {
+      "id": "services-ppi",
+      "title": "Services PPI",
+      "charts": [
+        "japan-ppi-goods-and-services-yoy",
+        "japan-quarterly-core-ppi-services-yoy",
+        "japan-ppi-services-and-wages-yoy-3mma",
+        "japan-ppi-services-by-labour-content-yoy",
+        "japan-ppi-services-by-labour-content-mom-3mma",
+        "japan-cntrb-to-yoy-chg-in-services-ppi-ppts"
+      ]
+    }
+  ],
+  "missing": []
+}

@@ -1,0 +1,32 @@
+{
+  "economy": "tw",
+  "pack": "prices",
+  "title": "Consumer prices",
+  "sections": [
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "charts": [
+        "taiwan-cpi-and-wages-yoy-3mma",
+        "taiwan-cpi-and-pmi-prices",
+        "taiwan-consumer-price-expectations",
+        "taiwan-cpi-and-import-prices-yoy",
+        "taiwan-cpi-oil-prices-yoy-3mma",
+        "taiwan-and-us-core-cpi-mom-annualised"
+      ]
+    },
+    {
+      "id": "details",
+      "title": "Details",
+      "charts": [
+        "taiwan-cpi-yoy-recent",
+        "taiwan-cpi-mom-annualised",
+        "taiwan-core-cpi-around-lny-mom-annualised",
+        "taiwan-cpi-goods-and-services-yoy",
+        "taiwan-oil-prices-yoy",
+        "taiwan-food-cpi-sa"
+      ]
+    }
+  ],
+  "missing": []
+}

@@ -1,0 +1,44 @@
+{
+  "economy": "region",
+  "pack": "prices",
+  "title": "Consumer prices",
+  "sections": [
+    {
+      "id": "upstream",
+      "title": "Upstream",
+      "charts": [
+        "advanced-economy-headline-cpi-yoy",
+        "advanced-economy-core-cpi-yoy",
+        "advanced-economy-trimmed-mean-cpi-yoy",
+        "asia-headline-cpi-yoy",
+        "asia-core-cpi-yoy-3mma-2",
+        "asia-core-cpi-yoy-annual"
+      ]
+    },
+    {
+      "id": "cpi",
+      "title": "CPI",
+      "charts": [
+        "all-goods-cpi-yoy-z-score",
+        "durable-goods-cpi-yoy-z-score",
+        "services-cpi-yoy-z-score",
+        "all-goods-cpi-yoy",
+        "durable-goods-cpi-yoy",
+        "services-cpi-yoy"
+      ]
+    },
+    {
+      "id": "cpi-details",
+      "title": "CPI, Details",
+      "charts": [
+        "region-ppi-yoy-3mma",
+        "region-import-prices-local-currency-terms-yoy-3mma",
+        "region-terms-of-trade-yoy-3mma",
+        "global-commodity-prices-yoy",
+        "global-commodity-prices-by-type-yoy",
+        "global-food-prices-index-2019-100"
+      ]
+    }
+  ],
+  "missing": []
+}

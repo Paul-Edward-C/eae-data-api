@@ -1,0 +1,20 @@
+{
+  "economy": "jp",
+  "pack": "markets",
+  "title": "Markets",
+  "sections": [
+    {
+      "id": "markets",
+      "title": "Markets",
+      "charts": [
+        "japan-usdjpy-daily",
+        "japan-jpy-and-10yr-yield-spread-daily",
+        "japan-usdjpy-and-10yr-yield-spread-monthly",
+        "japan-jpy-reer-2",
+        "japan-jpy",
+        "japan-jgb-curve"
+      ]
+    }
+  ],
+  "missing": []
+}

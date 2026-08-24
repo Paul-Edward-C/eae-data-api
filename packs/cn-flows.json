@@ -1,0 +1,32 @@
+{
+  "economy": "cn",
+  "pack": "flows",
+  "title": "Flows",
+  "sections": [
+    {
+      "id": "trade-balance",
+      "title": "Trade balance",
+      "charts": [
+        "china-trade-balance-sa-usd-bn",
+        "china-travel-balance-usd-bn",
+        "china-travel-credit-and-debit-usd-bn",
+        "china-current-account-of-gdp",
+        "china-monthly-trade-balance-customs-and-bop-usd-bn",
+        "china-current-account-by-component-of-gdp"
+      ]
+    },
+    {
+      "id": "bop",
+      "title": "BOP",
+      "charts": [
+        "china-fx-settlement-usd-bn",
+        "china-foreigner-holdings-cny-bn",
+        "china-direct-investment-usd-bn",
+        "china-portfolio-investment-usd-bn",
+        "china-preliminary-bop-financial-account-usd-bn",
+        "china-preliminary-bop-financial-account-of-gdp"
+      ]
+    }
+  ],
+  "missing": []
+}

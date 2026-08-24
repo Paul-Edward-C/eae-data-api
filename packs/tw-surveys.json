@@ -1,0 +1,44 @@
+{
+  "economy": "tw",
+  "pack": "surveys",
+  "title": "Surveys",
+  "sections": [
+    {
+      "id": "headlines",
+      "title": "Headlines",
+      "charts": [
+        "taiwan-mfg-pmi-1m-outlook",
+        "taiwan-pmis",
+        "taiwan-mfg-pmi-capex-intentions",
+        "taiwan-mfg-pmi-new-orders",
+        "taiwan-mfg-pmi",
+        "taiwan-mfg-pmi-6m-outlook"
+      ]
+    },
+    {
+      "id": "mfg",
+      "title": "Mfg",
+      "charts": [
+        "taiwan-mfg-pmi-chemials",
+        "taiwan-mfg-pmi-electrical-machinery",
+        "taiwan-orders-inventories-electrical-machinery-pmi",
+        "taiwan-mfg-pmi-order-backlogs-delivery-times-2",
+        "taiwan-mfg-pmi-output",
+        "taiwan-mfg-pmi-inventories"
+      ]
+    },
+    {
+      "id": "non-mfg",
+      "title": "Non-mfg",
+      "charts": [
+        "taiwan-non-manufacturing-pmi",
+        "taiwan-non-mfg-pmi-business-activity",
+        "taiwan-non-mfg-pmi-sectors",
+        "taiwan-non-mfg-pmi-outlook",
+        "taiwan-non-mfg-pmi-employment",
+        "taiwan-non-mfg-pmi-construction-and-real-estate"
+      ]
+    }
+  ],
+  "missing": []
+}

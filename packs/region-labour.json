@@ -1,0 +1,66 @@
+{
+  "economy": "region",
+  "pack": "labour",
+  "title": "Labour",
+  "sections": [
+    {
+      "id": "jobs-and-unemployment",
+      "title": "Jobs and unemployment",
+      "charts": [
+        "asia-unemployment-rate-z-score",
+        "global-unemployment-rate-z-score",
+        "asia-employment-m-2019-100",
+        "region-hospitality-employment-2019-100"
+      ]
+    },
+    {
+      "id": "part-rate",
+      "title": "Part rate",
+      "charts": [
+        "region-labour-market-participation-rate",
+        "region-female-participation-rates-monthly",
+        "region-elderly-participation-rates-annual",
+        "global-labour-market-participation-rate"
+      ]
+    },
+    {
+      "id": "wages",
+      "title": "Wages",
+      "charts": [
+        "region-labour-productivity-manufacturing",
+        "labour-productivity-whole-economy",
+        "region-annual-wages-current-prices-yoy",
+        "quarterly-manufacturing-wages-yoy",
+        "world-nominal-wages-2005-100",
+        "world-real-wages-2005-100"
+      ]
+    },
+    {
+      "id": "population",
+      "title": "Population",
+      "charts": [
+        "asia-population-aged-65-of-total",
+        "asia-population-aged-65-of-total-15-yr-change",
+        "asia-population-aged-80-of-total",
+        "asia-population-aged-80-of-total-15-yr-change",
+        "world-population-aged-65-of-total",
+        "world-population-aged-80-of-total"
+      ]
+    },
+    {
+      "id": "demographics",
+      "title": "Demographics",
+      "charts": [
+        "region-fertility-rate",
+        "region-life-expectancy-at-age-65",
+        "region-life-expectancy-at-birth",
+        "region-share-of-births-outside-of-marriage",
+        "region-mean-age-of-women-at-childbirth",
+        "region-crude-marriage-rate"
+      ]
+    }
+  ],
+  "missing": [
+    "ch_female_m_curve (Region, Female participation rate by age, %)"
+  ]
+}

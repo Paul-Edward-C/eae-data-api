@@ -1,0 +1,68 @@
+{
+  "economy": "jp",
+  "pack": "money",
+  "title": "Money",
+  "sections": [
+    {
+      "id": "money-supply",
+      "title": "Money supply",
+      "charts": [
+        "japan-monetary-base",
+        "japan-monetary-base-mom-chg-jpy-trn",
+        "japan-monetary-base-yoy",
+        "japan-boj-jgb-purchases-jpy-bn",
+        "japan-financial-balance-by-sector-of-gdp",
+        "japan-financial-balance-by-sector-stock-annual-of-gdp",
+        "japan-jgbs-and-boj-holdings-jpy-tn"
+      ]
+    },
+    {
+      "id": "fiscal-m-q",
+      "title": "Fiscal, M & Q",
+      "charts": [
+        "japan-quarterly-fiscal-balance-of-gdp",
+        "japan-central-government-tax-revenue-verus-budget-of-gdp",
+        "japan-central-govt-social-security-monthly-of-gdp",
+        "japan-central-government-tax-revenue-by-type-jpy-bn",
+        "japan-government-interest-income-and-expenses-jpy-tn-12m-sum"
+      ]
+    },
+    {
+      "id": "fiscal-budget",
+      "title": "Fiscal, Budget",
+      "charts": [
+        "japan-central-government-budget-primary-balance-of-gdp",
+        "japan-central-government-tax-revenue-of-gdp",
+        "japan-central-government-expenditure-of-gdp",
+        "japan-central-government-budget-fiscal-impulse-ppts",
+        "japan-annual-budgets-government-spending-of-gdp",
+        "japan-annual-budgets-government-spending-jpy-tn"
+      ]
+    },
+    {
+      "id": "fiscal-annual",
+      "title": "Fiscal, Annual",
+      "charts": [
+        "japan-annual-fiscal-balance-of-gdp",
+        "japan-tax-and-social-security-payments-of-gdp",
+        "japan-social-security-benefits-paid-of-gdp",
+        "japan-government-net-interest-income-jpy-tn",
+        "japan-government-interest-income-jpy-tn",
+        "japan-government-net-interest-payments-jpy-tn"
+      ]
+    },
+    {
+      "id": "governmnt-bs",
+      "title": "Governmnt BS",
+      "charts": [
+        "japan-general-goverment-liabilites-jpy-tn",
+        "japan-government-financial-assets-of-gdp",
+        "japan-gpif-portfolio-by-asset-jpy-tn",
+        "japan-net-government-debt-of-gdp",
+        "japan-government-debt-quarterly-of-gdp",
+        "japan-gpif-assets-jpy-trn"
+      ]
+    }
+  ],
+  "missing": []
+}

@@ -1,0 +1,44 @@
+{
+  "economy": "tw",
+  "pack": "macro",
+  "title": "Macro",
+  "sections": [
+    {
+      "id": "general-macro",
+      "title": "General macro",
+      "charts": [
+        "taiwan-monitoring-indicator",
+        "taiwan-monitoring-indicator-and-gdp",
+        "taiwan-capex-and-capital-goods-imports-yoy",
+        "taiwan-private-sector-machinery-and-eq-capex-twd-bn",
+        "taiwan-ip-and-retail-sales-yoy",
+        "taiwan-leading-indicator"
+      ]
+    },
+    {
+      "id": "gdp",
+      "title": "GDP",
+      "charts": [
+        "taiwan-gdp-yoy",
+        "taiwan-gdp-sa-twd-bn",
+        "taiwan-rgdp-qoq",
+        "taiwan-rgdp-actual-and-trend-2019-100",
+        "taiwan-gdp-output-gap",
+        "taiwan-ngdp-qoq"
+      ]
+    },
+    {
+      "id": "gdp-details",
+      "title": "GDP details",
+      "charts": [
+        "taiwan-terms-of-trade-impact-on-national-income",
+        "taiwan-rgdp-capex-and-exports-yoy",
+        "taiwan-rgdp-capex-and-exports-yoy-2",
+        "taiwan-rgdp-investment-twd-bn",
+        "taiwan-contribution-to-gdp-growth-ppts",
+        "taiwan-contribution-to-gdp-growth-by-industry-ppts"
+      ]
+    }
+  ],
+  "missing": []
+}

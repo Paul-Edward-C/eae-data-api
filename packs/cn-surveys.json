@@ -1,0 +1,66 @@
+{
+  "economy": "cn",
+  "pack": "surveys",
+  "title": "Surveys",
+  "sections": [
+    {
+      "id": "pmi-headlines",
+      "title": "PMI, Headlines",
+      "charts": [
+        "china-nbs-composite-pmi-output",
+        "china-manufacturing-pmi",
+        "china-ckgsb-small-business-survey",
+        "china-services-pmi",
+        "china-nbs-construction-pmi",
+        "china-mfg-pmi-overall-and-export-orders"
+      ]
+    },
+    {
+      "id": "pbc-survey",
+      "title": "PBC Survey",
+      "charts": [
+        "china-pbc-household-survey-income-confidence",
+        "china-pbc-firm-survey-profitability",
+        "china-pbc-firm-survey-revenue-and-profits",
+        "china-pbc-bank-survey-industry-climate",
+        "china-pbc-bank-survey-loan-demand",
+        "china-pbc-bank-survey-loan-demand-industry"
+      ]
+    },
+    {
+      "id": "pmi-orders",
+      "title": "PMI, Orders",
+      "charts": [
+        "china-mfg-pmi-orders-in-hand-and-inventories",
+        "china-manufacturing-pmi-new-orders-type",
+        "china-mfg-pmi-new-orders",
+        "china-mfg-pmi-export-orders",
+        "china-mfg-pmi-domestic-orders"
+      ]
+    },
+    {
+      "id": "pmi-other-details",
+      "title": "PMI, Other details",
+      "charts": [
+        "china-pmi-orders-in-hand",
+        "china-pmi-employment",
+        "china-pmi-business-outlook",
+        "china-pmi-supplier-delivery-times",
+        "china-mfg-pmi-output"
+      ]
+    },
+    {
+      "id": "ck-survey-details",
+      "title": "CK survey, Details",
+      "charts": [
+        "china-ckgsb-survey-financing-conditions",
+        "china-ckgsb-survey-sales-and-profits",
+        "china-ckgsb-survey-labour",
+        "china-ckgsb-investment",
+        "china-ckgsb-costs-and-inventories",
+        "china-ckgsb-survey-headline-and-financing-conditions"
+      ]
+    }
+  ],
+  "missing": []
+}

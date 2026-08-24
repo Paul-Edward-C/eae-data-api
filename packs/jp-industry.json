@@ -1,0 +1,68 @@
+{
+  "economy": "jp",
+  "pack": "industry",
+  "title": "Industry",
+  "sections": [
+    {
+      "id": "industry",
+      "title": "Industry",
+      "charts": [
+        "japan-industrial-production-index",
+        "japan-industrial-production-by-main-product",
+        "japan-industrial-production-yoy-3mma",
+        "japan-value-added-by-sector-2019-100",
+        "japan-value-added-by-sector-yoy",
+        "japan-service-activity"
+      ]
+    },
+    {
+      "id": "orders",
+      "title": "Orders",
+      "charts": [
+        "japan-machine-orders-and-domestic-machinery-capex-2019-100",
+        "japan-core-machine-orders-jpy-bn",
+        "japan-machine-orders-domestic-jpy-bn",
+        "japan-machine-orders-by-industry-yoy",
+        "japan-machine-orders-overseas-jpy-bn",
+        "japan-building-starts-2019-100"
+      ]
+    },
+    {
+      "id": "corporate-profits",
+      "title": "Corporate profits",
+      "charts": [
+        "japan-profits-jpy-bn",
+        "japan-operating-profits-and-corporate-surplus-jpy-bn",
+        "japan-profits-all-and-by-sector-of-gdp",
+        "japan-ordinary-profit-margin",
+        "japan-operating-profit-margin-non-mfg",
+        "japan-non-mfg-operating-margin-by-size"
+      ]
+    },
+    {
+      "id": "corporate-finances",
+      "title": "Corporate finances",
+      "charts": [
+        "japan-sales-jpy-bn",
+        "japan-operating-costs-and-sales-jpy-bn",
+        "japan-personnel-expenses-of-revenue",
+        "japan-debt-equity",
+        "japan-corporate-cash-holdings-jpy-bn",
+        "japan-wages-of-value-added"
+      ]
+    },
+    {
+      "id": "capex",
+      "title": "Capex",
+      "charts": [
+        "japan-capex-expectations-yoy",
+        "japan-rgdp-capex-public-and-private-dec-2019-100",
+        "japan-rgdp-capex-by-type-dec-2019-100",
+        "japan-capex-yoy",
+        "japan-capex-by-sector-dec-2019-100",
+        "japan-software-investment-by-size-of-firm-dec-2019-100"
+      ]
+    }
+  ],
+  "missing": []
+}

@@ -1,0 +1,44 @@
+{
+  "economy": "kr",
+  "pack": "industrial",
+  "title": "Industrial prices",
+  "sections": [
+    {
+      "id": "foreign-trade",
+      "title": "Foreign trade",
+      "charts": [
+        "korea-import-and-export-prices-annual-2019-100",
+        "korea-foreign-trade-prices-usd-basis-monthly-2019-100",
+        "korea-trade-prices-energy-and-chips-2019-100",
+        "korea-foreign-trade-prices-krw-basis-yoy",
+        "korea-terms-of-trade-2019-100-3",
+        "korea-terms-of-trade"
+      ]
+    },
+    {
+      "id": "mpi",
+      "title": "MPI",
+      "charts": [
+        "korea-import-prices-by-currency-yoy",
+        "korea-import-prices-and-ppi-index-2019-100",
+        "korea-import-and-global-prices-yoy",
+        "korea-import-and-energy-prices-yoy",
+        "korea-oil-price-daily-krw",
+        "korea-import-prices-and-global-commodities-yoy"
+      ]
+    },
+    {
+      "id": "ppi",
+      "title": "PPI",
+      "charts": [
+        "korea-ppi-yoy",
+        "korea-ppi-and-import-prices-2019-100",
+        "korea-ppi-mfg-v-mining-index-2019-100",
+        "korea-ppi-goods-and-services-yoy",
+        "korea-services-ppi-contribution-to-yoy-chg-ppts",
+        "korea-import-prices-and-ppi-yoy-2"
+      ]
+    }
+  ],
+  "missing": []
+}

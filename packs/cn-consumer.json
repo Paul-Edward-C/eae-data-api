@@ -1,0 +1,79 @@
+{
+  "economy": "cn",
+  "pack": "consumer",
+  "title": "Consumption",
+  "sections": [
+    {
+      "id": "summary",
+      "title": "Summary",
+      "charts": [
+        "china-consumer-spending-actual-and-trend-cny-bn",
+        "china-real-consumer-spending-actual-and-trend-cny-bn",
+        "china-household-survey-actual-and-trend",
+        "china-covid-excess-savings",
+        "china-household-consumption-and-income-annual-of-gdp",
+        "china-national-savings-ratio"
+      ]
+    },
+    {
+      "id": "household-spending",
+      "title": "Household spending",
+      "charts": [
+        "china-real-consumer-spending-by-area-actual-and-trend-cny-bn",
+        "china-goods-expenditure-per-capita-of-total",
+        "china-services-expenditure-per-capita-of-total",
+        "china-income-and-ngdp-yoy",
+        "china-goods-and-services-spending-of-gdp"
+      ]
+    },
+    {
+      "id": "household-income",
+      "title": "Household income",
+      "charts": [
+        "china-household-survey-income-actual-and-trend",
+        "china-household-income-and-ngdp-yoy",
+        "china-household-income-composition-of-gdp",
+        "china-household-income-wages-and-business-yoy-12m-avg",
+        "china-household-income-property-and-transfer-yoy-12m-avg",
+        "china-rural-wages-and-migrant-income-yoy-12m-avg"
+      ]
+    },
+    {
+      "id": "annual",
+      "title": "Annual",
+      "charts": [
+        "china-fyps-and-consumption-share-of-gdp",
+        "china-household-income-annual-of-gdp",
+        "china-savings-ratio-annual",
+        "china-flow-of-funds-allocation-of-household-income-of-gdp",
+        "china-income-check-yoy",
+        "china-consumer-spending-services-of-total"
+      ]
+    },
+    {
+      "id": "retail-sales",
+      "title": "Retail sales",
+      "charts": [
+        "china-retail-sales-sa-2019-100",
+        "china-retail-sales-yoy",
+        "china-retail-sales-mom-annualised-3mma",
+        "china-retail-sales-by-methodology-sa-2019-100",
+        "china-retail-sales-volume-actual-and-trend-2019-100",
+        "china-retail-sales-goods-and-services-yoy"
+      ]
+    },
+    {
+      "id": "confidence",
+      "title": "Confidence",
+      "charts": [
+        "china-nbs-monthly-consumer-confidence",
+        "china-pbc-depositor-survey-income",
+        "china-pbc-depositor-survey-employment",
+        "china-pbc-china-household-survey-house-purchase-intentions",
+        "china-pbc-household-survey-allocation-of-incomes",
+        "china-saving-and-spending-intentions"
+      ]
+    }
+  ],
+  "missing": []
+}

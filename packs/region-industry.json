@@ -1,0 +1,32 @@
+{
+  "economy": "region",
+  "pack": "industry",
+  "title": "Industry",
+  "sections": [
+    {
+      "id": "output",
+      "title": "Output",
+      "charts": [
+        "region-ip-3mma-2019-100",
+        "region-ip-yoy-3mma",
+        "korea-and-taiwan-tech-industrial-production-2019-100-2",
+        "tech-of-capex",
+        "region-services-output-yoy"
+      ]
+    },
+    {
+      "id": "energy",
+      "title": "Energy",
+      "charts": [
+        "region-overseas-production-ratio",
+        "region-import-dependence-in-energy",
+        "region-lng-imports-via-hormuz-strait",
+        "region-electricity-generation-from-gas"
+      ]
+    }
+  ],
+  "missing": [
+    "ch_lng_me_a (Region, LNG imports, % via Hormuz Strait)",
+    "ch_oil_me_a (Region, Oil imports, % via Hormuz Strait)"
+  ]
+}

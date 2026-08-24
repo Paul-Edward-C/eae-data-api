@@ -1,0 +1,103 @@
+{
+  "economy": "cn",
+  "pack": "exports",
+  "title": "Exports",
+  "sections": [
+    {
+      "id": "outlook-and-summary",
+      "title": "Outlook and summary",
+      "charts": [
+        "china-export-outlook-pmi",
+        "china-export-outlook-imported-components",
+        "china-foreign-trade-sa-usd-bn",
+        "china-import-outlook-domestic-construction-yoy",
+        "china-import-outlook-pmi",
+        "china-exports-share-of-global-total"
+      ]
+    },
+    {
+      "id": "general",
+      "title": "General",
+      "charts": [
+        "china-foreign-trade-usd-terms",
+        "china-foreign-trade-sa-cny-bn",
+        "china-imports-share-of-global-total",
+        "dm-mfg-imports-from-china-of-total",
+        "china-exports-by-firm-ownership-of-total-monthly",
+        "china-export-volumes-relative-to-world"
+      ]
+    },
+    {
+      "id": "volumes",
+      "title": "Volumes",
+      "charts": [
+        "china-trade-volumes-yoy",
+        "china-manufactures-imports-and-exports-yoy-3mma",
+        "china-imports-volume-and-px-yoy",
+        "china-imports-primary-products-volume-and-px-yoy",
+        "china-import-volumes-by-type-yoy",
+        "china-trade-volumes-cpb-2019-100"
+      ]
+    },
+    {
+      "id": "balance",
+      "title": "Balance",
+      "charts": [
+        "china-trade-balance-sitc-usd-bn-3mma",
+        "china-trade-balance-by-country-usd-bn-3mma",
+        "china-trade-balance-sitc-of-gdp",
+        "china-trade-balance-primary-and-manufactures-of-gdp-12mma",
+        "china-machinery-balance-by-type-usd-bn-12mma",
+        "china-machinery-balance-by-type-of-gdp-12mma"
+      ]
+    },
+    {
+      "id": "imports",
+      "title": "Imports",
+      "charts": [
+        "china-imports-of-capital-goods-of-gdp",
+        "china-imports-by-broad-category-of-gdp-12mma",
+        "china-capital-goods-imports-semi-and-others-usd-bn",
+        "china-semi-equipment-imports-usd-bn-3mma",
+        "china-imports-ordinary-and-processing-usd-bn"
+      ]
+    },
+    {
+      "id": "exports",
+      "title": "Exports",
+      "charts": [
+        "china-exports-sitc-of-gdp",
+        "china-exports-major-products-usd-bn",
+        "china-exports-sitc-usd-bn-3mma",
+        "china-exports-tech-exports-usd-bn",
+        "china-tech-exports-and-taiwan-exports-2019-100"
+      ]
+    },
+    {
+      "id": "autos",
+      "title": "Autos",
+      "charts": [
+        "china-auto-exports-volume-units-th",
+        "china-auto-exports-usd-bn",
+        "china-auto-exports-by-type-unit-price-usd-3mma"
+      ]
+    },
+    {
+      "id": "countries",
+      "title": "Countries",
+      "charts": [
+        "china-exports-by-market-of-total-3mma",
+        "china-imports-by-source-12mma",
+        "china-imports-from-north-asia-of-total",
+        "china-imports-from-dm-usd-bn",
+        "china-exports-to-em-by-region-of-total",
+        "china-exports-to-latin-america-of-total"
+      ]
+    }
+  ],
+  "missing": [
+    "ch_x_auto_vol_comp (China, Auto exports by type and contribution, Volume)",
+    "ch_autos_type_val_nested (China, Car exports by type, Value, USD bn)",
+    "ch_autos_type_vol_nested (China, Auto exports by type, volume, th units)"
+  ]
+}
