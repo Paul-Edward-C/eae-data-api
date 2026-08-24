@@ -145,6 +145,7 @@ request_counts = defaultdict(lambda: {'count': 0, 'reset': datetime.now()})
 # inherit that member's access. Set GHOST_VERIFY_TOKENS=0 to fall back to the old
 # unverified decode only if something is wrong in production — it is not safe.
 GHOST_VERIFY_TOKENS = os.environ.get('GHOST_VERIFY_TOKENS', '1') != '0'
+GHOST_ALGORITHMS = ['RS256', 'RS384', 'RS512', 'PS256', 'PS384', 'PS512']
 _jwks_client = None
 
 
@@ -167,10 +168,15 @@ def _decode_ghost_token(token: str) -> dict:
     signing_key = client.get_signing_key_from_jwt(token)
     # Ghost sets aud to the site origin, which varies by deployment, so the
     # audience is not checked; the signature and expiry are what matter here.
+    # Allow the RSA family rather than RS256 alone -- Ghost does not always use
+    # RS256 and a hard-coded single algorithm rejects perfectly valid tokens.
+    # The list is fixed on purpose: reading `alg` from the token is the classic
+    # JWT hole (it lets a caller ask for "none", or for HS256 verified against
+    # the public key). Every entry here still requires Ghost's RSA public key.
     return jwt.decode(
         token,
         signing_key.key,
-        algorithms=['RS256'],
+        algorithms=GHOST_ALGORITHMS,
         options={'verify_aud': False, 'verify_exp': True},
     )
 
@@ -658,6 +664,12 @@ async def whoami(authorization: Optional[str] = Header(None),
         return out
 
     token = authorization.replace('Bearer ', '')
+    try:
+        out["token_header"] = jwt.get_unverified_header(token)   # headers are not secret
+    except Exception as e:
+        out["stage"] = "token_unparseable"
+        out["detail"] = type(e).__name__
+        return out
     if not GHOST_URL or not GHOST_ADMIN_KEY:
         out["stage"] = "ghost_not_configured"      # cannot look anyone up
         return out
