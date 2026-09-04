@@ -580,6 +580,60 @@ def compress_and_upload(db_path):
     client.upload_file(str(gz_path), R2_BUCKET, R2_DB_KEY)
     print("Upload complete")
 
+    notify_api_refresh()
+
+
+def notify_api_refresh():
+    """
+    Tell the live API to pull the database it has just been handed.
+
+    The rest of the chain is automatic -- watch_parquet rebuilds the local DB when a
+    parquet changes, and the 02:00 agent compresses and uploads it -- but nothing told
+    the deployed service. sqlite_data_access.download_database() returns early if the
+    file is already on disk, and Railway keeps it on a volume, so a running instance
+    serves whatever it first downloaded until something asks it to refresh. That is why
+    the API can sit weeks behind R2 with every local piece working correctly.
+
+    POST /admin/refresh-db drops the server's copy and re-downloads; it also clears the
+    in-process stats cache, so /stats reflects the new database straight away.
+
+    Needs DATA_API_URL and DATA_API_ADMIN_KEY (any key listed in the service's API_KEYS)
+    alongside the R2 credentials in r2_keys.txt. Without them this says so and returns --
+    the upload itself has already succeeded either way, so a refresh problem must never
+    fail the job.
+    """
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    url = os.environ.get('DATA_API_URL', '').rstrip('/')
+    key = os.environ.get('DATA_API_ADMIN_KEY', '')
+    if not url or not key:
+        print("Skipping API refresh: set DATA_API_URL and DATA_API_ADMIN_KEY to enable "
+              "(the API keeps serving its previous database until then)")
+        return False
+
+    req = urllib.request.Request(
+        f'{url}/admin/refresh-db', method='POST',
+        data=b'', headers={'X-API-Key': key, 'Content-Length': '0'})
+    print(f"Asking {url} to refresh from R2...")
+    try:
+        # the server deletes and re-downloads a multi-GB file, so give it room
+        with urllib.request.urlopen(req, timeout=900) as r:
+            body = _json.loads(r.read().decode() or '{}')
+        print(f"  API refreshed: {body.get('message', body)}")
+        return True
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode()[:200]
+        print(f"  API refresh failed (HTTP {e.code}): {detail}")
+    except Exception as e:
+        print(f"  API refresh failed ({type(e).__name__}): {e}")
+    print("  R2 has the new database, but the API is still serving its old copy. "
+          "A redeploy will NOT pick it up -- the DB sits on a Railway volume that "
+          "survives deploys, and download_database() skips the download whenever "
+          "the file is already there. Retry this call, or POST /admin/refresh-db.")
+    return False
+
 
 def upload_only():
     """Upload existing data.db.gz to R2 without rebuilding."""
@@ -613,6 +667,8 @@ def upload_only():
     print(f"Uploading to R2 ({R2_BUCKET}/{R2_DB_KEY})...")
     client.upload_file(str(gz_path), R2_BUCKET, R2_DB_KEY)
     print("Upload complete")
+
+    notify_api_refresh()
 
 
 def main():
