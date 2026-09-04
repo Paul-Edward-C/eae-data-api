@@ -46,6 +46,11 @@ VALID_SUFFIXES = ['_m.parquet', '_q.parquet', '_a.parquet']
 # R2 upload config
 R2_BUCKET = os.environ.get('S3_BUCKET', 'eae-data-api')
 R2_ENDPOINT = os.environ.get('R2_ENDPOINT', 'fd2c6c5f2d6d8bc9ca228f83b5671df3.r2.cloudflarestorage.com')
+
+# The deployed API to poke after an upload. Defaulted rather than left to r2_keys.txt
+# so a second machine only has to be given the secret: the URL is not one, and every
+# device that has to be told it separately is a device that can drift.
+DATA_API_URL = os.environ.get('DATA_API_URL', 'https://data-api-production-74e0.up.railway.app')
 R2_DB_KEY = 'data.db.gz'
 
 
@@ -607,10 +612,10 @@ def notify_api_refresh():
     import urllib.error
     import urllib.request
 
-    url = os.environ.get('DATA_API_URL', '').rstrip('/')
+    url = DATA_API_URL.rstrip('/')
     key = os.environ.get('DATA_API_ADMIN_KEY', '')
     if not url or not key:
-        print("Skipping API refresh: set DATA_API_URL and DATA_API_ADMIN_KEY to enable "
+        print("Skipping API refresh: set DATA_API_ADMIN_KEY in r2_keys.txt to enable "
               "(the API keeps serving its previous database until then)")
         return False
 

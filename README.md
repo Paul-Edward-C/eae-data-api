@@ -47,11 +47,18 @@ mkdir -p ~/.local/data_api
 ~/data_api/r2_keys.txt
 ```
 
-Format (two lines):
+Format:
 ```
 R2_ACCESS_KEY_ID=...
 R2_SECRET_ACCESS_KEY=...
+DATA_API_ADMIN_KEY=...
 ```
+
+`DATA_API_ADMIN_KEY` is any value from the Railway service's `API_KEYS` variable. It lets the
+nightly upload tell the live API to reload from R2; without it the upload still runs and the API
+keeps serving its previous database until something refreshes it. **Every device that uploads
+needs it** — otherwise whichever Mac uploads last leaves the API stale. The URL it posts to is
+defaulted in `update_db.py`, so only this secret has to be copied between machines.
 
 ### 4. Parquet source files
 
