@@ -603,6 +603,7 @@ def notify_api_refresh():
     fail the job.
     """
     import json as _json
+    import time as _time
     import urllib.error
     import urllib.request
 
@@ -612,6 +613,16 @@ def notify_api_refresh():
         print("Skipping API refresh: set DATA_API_URL and DATA_API_ADMIN_KEY to enable "
               "(the API keeps serving its previous database until then)")
         return False
+
+    def db_size():
+        """The size the service reports for its copy, or None while it is down."""
+        try:
+            with urllib.request.urlopen(f'{url}/debug', timeout=30) as r:
+                return _json.loads(r.read().decode()).get('db_size_mb')
+        except Exception:
+            return None
+
+    before = db_size()
 
     req = urllib.request.Request(
         f'{url}/admin/refresh-db', method='POST',
@@ -624,14 +635,40 @@ def notify_api_refresh():
         print(f"  API refreshed: {body.get('message', body)}")
         return True
     except urllib.error.HTTPError as e:
-        detail = e.read().decode()[:200]
-        print(f"  API refresh failed (HTTP {e.code}): {detail}")
+        # a real answer from the service: bad key, not admin, or the refresh failed
+        print(f"  API refresh failed (HTTP {e.code}): {e.read().decode()[:200]}")
+        print("  R2 has the new database, but the API is still serving its old copy. "
+              "A redeploy will NOT pick it up -- the DB sits on a Railway volume that "
+              "survives deploys, and download_database() skips the download whenever "
+              "the file is already there. Fix the key, or POST /admin/refresh-db.")
+        return False
     except Exception as e:
-        print(f"  API refresh failed ({type(e).__name__}): {e}")
-    print("  R2 has the new database, but the API is still serving its old copy. "
-          "A redeploy will NOT pick it up -- the DB sits on a Railway volume that "
-          "survives deploys, and download_database() skips the download whenever "
-          "the file is already there. Retry this call, or POST /admin/refresh-db.")
+        # No answer. This is the NORMAL outcome, not a failure: the service spends
+        # minutes deleting ~11 GB and unpacking 2.6 GB from R2, and the proxy in front
+        # of it closes the connection long before that finishes (RemoteDisconnected).
+        # The refresh is still running, so confirm by watching the size it reports
+        # rather than reporting a failure that did not happen.
+        print(f"  No response ({type(e).__name__}) -- expected, the refresh outlives "
+              f"the request. Waiting for the service to come back...")
+
+    deadline = _time.time() + 900
+    seen_down = False
+    while _time.time() < deadline:
+        _time.sleep(20)
+        after = db_size()
+        if after is None:
+            seen_down = True
+            continue
+        if before is not None and after != before:
+            print(f"  API refreshed: {before} MB -> {after} MB")
+            return True
+        if seen_down:
+            print(f"  API back up, reporting {after} MB "
+                  f"({'unchanged' if after == before else 'changed'})")
+            return True
+
+    print("  Could not confirm the refresh within 15 minutes. Check "
+          f"{url}/debug and /stats; the upload to R2 itself succeeded.")
     return False
 
 
