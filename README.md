@@ -39,26 +39,43 @@ The SQLite DB lives **outside iCloud** (iCloud doesn't support symlinks and will
 mkdir -p ~/.local/data_api
 ```
 
-### 3. Copy R2 credentials
+### 3. Secrets
 
-`r2_keys.txt` is git-ignored (contains secrets). Copy it from the other Mac via AirDrop/scp to:
+`update_db.py` reads three secrets, each from the environment first and the login Keychain
+second. The Keychain is the intended home: it is per-machine, encrypted at rest, and nothing
+has to be carried between Macs except the values themselves. Same mechanism the toolsite uses
+for its Netlify token.
 
-```
-~/data_api/r2_keys.txt
+Run these once per device. `-w` with no argument prompts for the value (twice, to confirm), so
+the secret never reaches your shell history:
+
+```bash
+security add-generic-password -U -a "$USER" -s eae-r2-access-key   -w
+security add-generic-password -U -a "$USER" -s eae-r2-secret-key   -w
+security add-generic-password -U -a "$USER" -s eae-data-api-admin  -w
 ```
 
-Format:
-```
-R2_ACCESS_KEY_ID=...
-R2_SECRET_ACCESS_KEY=...
-DATA_API_ADMIN_KEY=...
+| Service | Value |
+|---|---|
+| `eae-r2-access-key` | Cloudflare R2 access key id |
+| `eae-r2-secret-key` | Cloudflare R2 secret access key |
+| `eae-data-api-admin` | any value from the Railway service's `API_KEYS` variable |
+
+The third one lets the nightly upload tell the live API to reload from R2. Without it the
+upload still runs and the API keeps serving its previous database until something refreshes
+it — so **every device that uploads needs all three**, or whichever Mac uploads last leaves
+the API stale. The API's URL is not a secret and is defaulted in `update_db.py`.
+
+Check what is stored (prints the value, so not into a shared terminal):
+
+```bash
+security find-generic-password -s eae-data-api-admin -w
 ```
 
-`DATA_API_ADMIN_KEY` is any value from the Railway service's `API_KEYS` variable. It lets the
-nightly upload tell the live API to reload from R2; without it the upload still runs and the API
-keeps serving its previous database until something refreshes it. **Every device that uploads
-needs it** — otherwise whichever Mac uploads last leaves the API stale. The URL it posts to is
-defaulted in `update_db.py`, so only this secret has to be copied between machines.
+> **`r2_keys.txt` (legacy).** Environment variables still win, so an existing
+> `~/data_api/r2_keys.txt` of `NAME=value` lines keeps working if something sources it. It is
+> git-ignored but plaintext on disk; once the Keychain is populated there is no reason to keep
+> it, and the launchd job no longer reads it.
 
 ### 4. Parquet source files
 
@@ -74,7 +91,9 @@ Pick one:
 
 ```bash
 cd ~/data_api
-set -a; source r2_keys.txt; set +a
+# credentials come from the Keychain entries created in step 3
+export R2_ACCESS_KEY_ID=$(security find-generic-password -s eae-r2-access-key -w)
+export R2_SECRET_ACCESS_KEY=$(security find-generic-password -s eae-r2-secret-key -w)
 python -c "
 import boto3, gzip, shutil
 from botocore.config import Config

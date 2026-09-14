@@ -9,7 +9,7 @@
     <array>
         <string>/bin/zsh</string>
         <string>-c</string>
-        <string>echo &quot;=== $(date) ===&quot;; set -a; source /Users/paul/data_api/r2_keys.txt; set +a; exec /Users/paul/opt/anaconda3/bin/python3 /Users/paul/data_api/update_db.py --upload</string>
+        <string>echo &quot;=== $(date) ===&quot;; exec /Users/paul/opt/anaconda3/bin/python3 /Users/paul/data_api/update_db.py --upload</string>
     </array>
 
     <key>WorkingDirectory</key>

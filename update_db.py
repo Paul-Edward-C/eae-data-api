@@ -22,6 +22,7 @@ import json
 import os
 import shutil
 import sqlite3
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -51,6 +52,45 @@ R2_ENDPOINT = os.environ.get('R2_ENDPOINT', 'fd2c6c5f2d6d8bc9ca228f83b5671df3.r2
 # so a second machine only has to be given the secret: the URL is not one, and every
 # device that has to be told it separately is a device that can drift.
 DATA_API_URL = os.environ.get('DATA_API_URL', 'https://data-api-production-74e0.up.railway.app')
+
+
+# Secrets: the Keychain first, the environment second.
+#
+# r2_keys.txt works but has to be hand-carried to every machine that uploads, and a
+# file of plaintext secrets in the repo directory is one stray `cat` away from a log.
+# The Keychain is per-machine, encrypted at rest, and already how the toolsite reads
+# its Netlify token (`security find-generic-password -s eae-netlify -w`).
+#
+# The environment still wins when set, so r2_keys.txt keeps working unchanged and a
+# machine can be migrated whenever suits. See README for the `security add-generic-
+# password` lines that populate it.
+KEYCHAIN_SERVICES = {
+    'R2_ACCESS_KEY_ID': 'eae-r2-access-key',
+    'R2_SECRET_ACCESS_KEY': 'eae-r2-secret-key',
+    'DATA_API_ADMIN_KEY': 'eae-data-api-admin',
+}
+
+
+def secret(name, default=''):
+    """The value of `name` from the environment, else the Keychain, else `default`."""
+    val = os.environ.get(name)
+    if val:
+        return val
+
+    service = KEYCHAIN_SERVICES.get(name)
+    if not service or sys.platform != 'darwin':
+        return default
+
+    try:
+        out = subprocess.run(
+            ['security', 'find-generic-password', '-s', service, '-w'],
+            capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.SubprocessError):
+        return default
+
+    # 44 is "item not found", which is the ordinary answer on a machine that has not
+    # been set up yet -- not something to report as a failure.
+    return out.stdout.strip() if out.returncode == 0 else default
 R2_DB_KEY = 'data.db.gz'
 
 
@@ -565,11 +605,12 @@ def compress_and_upload(db_path):
     compressed_mb = gz_path.stat().st_size / 1024 / 1024
     print(f"  {original_mb:.1f} MB -> {compressed_mb:.1f} MB ({compressed_mb/original_mb*100:.0f}%)")
 
-    access_key = os.environ.get('R2_ACCESS_KEY_ID') or os.environ.get('AWS_ACCESS_KEY_ID')
-    secret_key = os.environ.get('R2_SECRET_ACCESS_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY')
+    access_key = secret('R2_ACCESS_KEY_ID') or os.environ.get('AWS_ACCESS_KEY_ID')
+    secret_key = secret('R2_SECRET_ACCESS_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY')
 
     if not access_key or not secret_key:
-        print("\nError: R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY must be set for upload")
+        print("\nError: no R2 credentials -- set them in the Keychain (see README) "
+              "or in r2_keys.txt")
         sys.exit(1)
 
     client = boto3.client(
@@ -613,10 +654,11 @@ def notify_api_refresh():
     import urllib.request
 
     url = DATA_API_URL.rstrip('/')
-    key = os.environ.get('DATA_API_ADMIN_KEY', '')
+    key = secret('DATA_API_ADMIN_KEY')
     if not url or not key:
-        print("Skipping API refresh: set DATA_API_ADMIN_KEY in r2_keys.txt to enable "
-              "(the API keeps serving its previous database until then)")
+        print("Skipping API refresh: no DATA_API_ADMIN_KEY in the Keychain or the "
+              "environment (see README). The API keeps serving its previous "
+              "database until then.")
         return False
 
     def db_size():
@@ -690,11 +732,12 @@ def upload_only():
 
     print(f"Uploading existing {gz_path.name} ({gz_path.stat().st_size / 1024 / 1024:.1f} MB)")
 
-    access_key = os.environ.get('R2_ACCESS_KEY_ID') or os.environ.get('AWS_ACCESS_KEY_ID')
-    secret_key = os.environ.get('R2_SECRET_ACCESS_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY')
+    access_key = secret('R2_ACCESS_KEY_ID') or os.environ.get('AWS_ACCESS_KEY_ID')
+    secret_key = secret('R2_SECRET_ACCESS_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY')
 
     if not access_key or not secret_key:
-        print("Error: R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY must be set for upload")
+        print("Error: no R2 credentials -- set them in the Keychain (see README) "
+              "or in r2_keys.txt")
         sys.exit(1)
 
     client = boto3.client(
