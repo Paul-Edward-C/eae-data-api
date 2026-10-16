@@ -7,6 +7,7 @@ Downloads database from R2 if not present.
 
 import sqlite3
 import os
+import threading
 from typing import Optional, List, Dict
 from pathlib import Path
 
@@ -23,20 +24,49 @@ R2_DB_KEY = 'data.db.gz'
 _connection = None
 _stats_cache = None
 
+# One lock around download / swap / connect. Without it, /admin/refresh-db deleted data.db and spent minutes
+# downloading, and any request in that window saw no file, started a second download into the same paths, or
+# connected to a half-written file and kept that connection for the life of the process.
+_db_lock = threading.RLock()
 
-def download_database():
-    """Download and decompress database from R2 using boto3."""
+
+def check_database(path) -> Optional[str]:
+    """None if the SQLite file at `path` is sound, else a description of the problem.
+    Runs quick_check (b-tree structure) and the FTS5 index's own integrity check."""
+    try:
+        conn = sqlite3.connect(path)
+        try:
+            res = [r[0] for r in conn.execute('PRAGMA quick_check(5)').fetchall()]
+            if res != ['ok']:
+                return 'quick_check: ' + '; '.join(res)
+            conn.execute("INSERT INTO series_fts(series_fts) VALUES('integrity-check')")
+            conn.execute('SELECT COUNT(*) FROM series').fetchone()
+        finally:
+            conn.close()
+    except sqlite3.DatabaseError as e:
+        return f'{type(e).__name__}: {e}'
+    return None
+
+
+def download_database(replace=False):
+    """Download and decompress the database from R2 using boto3.
+
+    Decompresses to a temporary file, checks it, and only then renames it over DB_PATH, so a reader never sees
+    a partial file and a bad upload never replaces a good database. replace=False returns early if DB_PATH
+    exists. Caller must hold _db_lock."""
     import gzip
     import shutil
     import traceback
     import boto3
     from botocore.config import Config
 
-    if DB_PATH.exists():
+    if DB_PATH.exists() and not replace:
         print(f"Database already exists: {DB_PATH}")
         return True
 
-    gz_path = DB_PATH.parent / 'data.db.gz'
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    gz_path = DB_PATH.parent / 'data.db.gz.download'
+    tmp_path = DB_PATH.parent / 'data.db.download'
 
     try:
         access_key = os.environ.get('R2_ACCESS_KEY_ID') or os.environ.get('AWS_ACCESS_KEY_ID')
@@ -58,55 +88,64 @@ def download_database():
         print("Decompressing...")
 
         with gzip.open(gz_path, 'rb') as f_in:
-            with open(DB_PATH, 'wb') as f_out:
+            with open(tmp_path, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
-
-        # Remove compressed file
         gz_path.unlink()
 
+        problem = check_database(tmp_path)
+        if problem:
+            print(f"Downloaded database failed its integrity check, keeping the current one: {problem}")
+            tmp_path.unlink()
+            return False
+
+        for suffix in ('-wal', '-shm'):          # stale WAL files would be applied to the new file
+            p = DB_PATH.with_name(DB_PATH.name + suffix)
+            if p.exists():
+                p.unlink()
+        os.replace(tmp_path, DB_PATH)
         print(f"Database ready: {DB_PATH} ({DB_PATH.stat().st_size / 1024 / 1024:.0f}MB)")
         return True
 
     except Exception as e:
         print(f"Error downloading database: {e}")
         traceback.print_exc()
-        if gz_path.exists():
-            gz_path.unlink()
-        if DB_PATH.exists():
-            DB_PATH.unlink()
+        for p in (gz_path, tmp_path):
+            if p.exists():
+                p.unlink()
         return False
 
 
 def refresh_database():
-    """Delete existing database and re-download from R2. Returns True on success."""
+    """Re-download the database from R2 and swap it in. Returns True on success.
+
+    The current connection keeps serving while the new copy downloads and is checked; the rename leaves the old
+    file open for it (same inode). Only after a good swap is the connection dropped, so the next request opens the
+    new file. The old connection is not closed here, because another thread may be mid-query on it; it closes when
+    garbage-collected. If the new copy fails its check, the old database stays in place.
+    """
     global _connection, _stats_cache
-    _stats_cache = None
-    # Close existing connection
-    if _connection is not None:
-        try:
-            _connection.close()
-        except Exception:
-            pass
-        _connection = None
-
-    # Delete existing database
-    if DB_PATH.exists():
-        DB_PATH.unlink()
-        print(f"Deleted existing database: {DB_PATH}")
-
-    return download_database()
+    with _db_lock:
+        ok = download_database(replace=True)
+        if ok:
+            _connection = None
+            _stats_cache = None
+        return ok
 
 
 def get_connection():
     """Get database connection (reuses existing connection)."""
     global _connection
-    if _connection is None:
-        if not DB_PATH.exists():
-            if not download_database():
-                raise RuntimeError("Could not download database")
+    if _connection is not None:
+        return _connection
+    with _db_lock:
+        if _connection is None:
+            if not DB_PATH.exists():
+                if not download_database():
+                    raise RuntimeError("Could not download database")
 
-        _connection = sqlite3.connect(DB_PATH, check_same_thread=False)
-        _connection.row_factory = sqlite3.Row
+            conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            _connection = conn
     return _connection
 
 
@@ -144,8 +183,11 @@ def search_series(query: str, freq: Optional[str] = None, country: Optional[str]
         if not rows:
             raise sqlite3.OperationalError("No FTS results")
 
-    except sqlite3.OperationalError:
-        # Fall back to LIKE
+    except sqlite3.DatabaseError as e:
+        # Fall back to LIKE: no FTS hits, or a damaged FTS index (DatabaseError, 'disk image is malformed'),
+        # which used to surface as an HTTP 500 for every search
+        if not (isinstance(e, sqlite3.OperationalError) and str(e) == 'No FTS results'):
+            print(f"FTS search failed, falling back to LIKE: {type(e).__name__}: {e}")
         sql = 'SELECT name, country, frequency FROM series WHERE name LIKE ?'
         params = [f'%{query}%']
 

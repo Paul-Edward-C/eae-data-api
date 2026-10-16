@@ -17,6 +17,8 @@ Usage:
 """
 
 import argparse
+import contextlib
+import fcntl
 import gzip
 import json
 import os
@@ -41,6 +43,22 @@ LOCAL_DATA_ROOTS = {
 # Store .db files outside iCloud to avoid sync issues with large binary files.
 # Symlinks in the project directory point here.
 OUTPUT_DB = Path('/Users/paul/.local/data_api/data.db')
+# Held while the DB is written and while the upload snapshot is taken. watch_parquet (incremental updates after any
+# parquet change) and the 02:00 upload job both write OUTPUT_DB; without the lock the upload could copy the file
+# mid-update and ship a malformed database to R2.
+DB_LOCK = OUTPUT_DB.with_name('data.db.lock')
+
+
+@contextlib.contextmanager
+def db_lock():
+    """Exclusive inter-process lock on OUTPUT_DB (blocks until the other writer finishes)."""
+    DB_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    with open(DB_LOCK, 'w') as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
 EXCLUDED_PATTERNS = ['latest', 'recent', 'hist', 'history']
 VALID_SUFFIXES = ['_m.parquet', '_q.parquet', '_a.parquet']
 
@@ -551,7 +569,12 @@ def full_rebuild(conn, countries):
 
 
 def build_database(countries=None, rebuild=False):
-    """Build or update the SQLite database from parquet files."""
+    """Build or update the SQLite database from parquet files (under db_lock)."""
+    with db_lock():
+        return _build_database(countries, rebuild)
+
+
+def _build_database(countries=None, rebuild=False):
     if countries is None:
         countries = list(LOCAL_DATA_ROOTS.keys())
 
@@ -595,11 +618,40 @@ def compress_and_upload(db_path):
     from botocore.config import Config
 
     gz_path = db_path.parent / 'data.db.gz'
+    snap_path = db_path.parent / 'data.db.snapshot'
 
-    print(f"\nCompressing {db_path.name}...")
-    with open(db_path, 'rb') as f_in:
+    # Snapshot with SQLite's backup API under the lock, not a raw file copy: the live DB is in WAL mode, so the
+    # newest pages (the FTS index is rebuilt last) can still be in data.db-wal, and a plain copy of data.db alone
+    # ships a database whose FTS index is malformed -- the HTTP 500 on /search in October 2026
+    print(f"\nSnapshotting {db_path.name}...")
+    if snap_path.exists():
+        snap_path.unlink()
+    with db_lock():
+        src = sqlite3.connect(db_path)
+        dst = sqlite3.connect(snap_path)
+        try:
+            src.backup(dst)
+        finally:
+            src.close()
+    try:
+        dst.execute('PRAGMA journal_mode=DELETE')      # self-contained single file for the API
+        res = [r[0] for r in dst.execute('PRAGMA quick_check(5)').fetchall()]
+        if res != ['ok']:
+            raise sqlite3.DatabaseError('quick_check: ' + '; '.join(res))
+        dst.execute("INSERT INTO series_fts(series_fts) VALUES('integrity-check')")
+    except sqlite3.DatabaseError as e:
+        dst.close()
+        print(f"\nError: snapshot failed its integrity check, not uploading: {e}")
+        print("Rebuild with `python update_db.py --rebuild` and upload again.")
+        sys.exit(1)
+    dst.close()
+    print("  integrity check ok")
+
+    print(f"Compressing {snap_path.name}...")
+    with open(snap_path, 'rb') as f_in:
         with gzip.open(gz_path, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
+    snap_path.unlink()
 
     original_mb = db_path.stat().st_size / 1024 / 1024
     compressed_mb = gz_path.stat().st_size / 1024 / 1024
