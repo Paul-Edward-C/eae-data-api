@@ -23,6 +23,7 @@ R2_DB_KEY = 'data.db.gz'
 # Connection pool (reuse connections)
 _connection = None
 _stats_cache = None
+_catalog_cache = None
 
 # One lock around download / swap / connect. Without it, /admin/refresh-db deleted data.db and spent minutes
 # downloading, and any request in that window saw no file, started a second download into the same paths, or
@@ -123,12 +124,13 @@ def refresh_database():
     new file. The old connection is not closed here, because another thread may be mid-query on it; it closes when
     garbage-collected. If the new copy fails its check, the old database stays in place.
     """
-    global _connection, _stats_cache
+    global _connection, _stats_cache, _catalog_cache
     with _db_lock:
         ok = download_database(replace=True)
         if ok:
             _connection = None
             _stats_cache = None
+            _catalog_cache = None
         return ok
 
 
@@ -369,6 +371,16 @@ def get_stats() -> Dict:
         'by_frequency': by_freq
     }
     return _stats_cache
+
+
+def get_catalog() -> Optional[Dict]:
+    """The series guide built by update_db.py (catalog table), parsed once and cached
+    until the next refresh. None for an older database that predates the table."""
+    global _catalog_cache
+    if _catalog_cache is None:
+        import catalog
+        _catalog_cache = catalog.load_catalog(get_connection())
+    return _catalog_cache
 
 
 def get_multi_series_data(names: List[str], freq: Optional[str] = None, start: Optional[str] = None, end: Optional[str] = None) -> Dict:

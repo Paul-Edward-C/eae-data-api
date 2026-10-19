@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EAE Data Guide</title>
+<style>
+:root {
+  --bg: #fbfaf6;
+  --panel: #ffffff;
+  --ink: #1f2418;
+  --muted: #6b705f;
+  --line: #e4e2d8;
+  --accent: #556b2f;
+  --accent-soft: rgba(85, 107, 47, 0.10);
+  --chip: #f1efe6;
+  --chip-hover: #e3e8d6;
+  --mark: #fff2b3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15170f;
+    --panel: #1d2016;
+    --ink: #e8e8de;
+    --muted: #a1a492;
+    --line: #2f3325;
+    --accent: #a9c27a;
+    --accent-soft: rgba(169, 194, 122, 0.12);
+    --chip: #262a1d;
+    --chip-hover: #33392a;
+    --mark: #4a4520;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15170f;
+  --panel: #1d2016;
+  --ink: #e8e8de;
+  --muted: #a1a492;
+  --line: #2f3325;
+  --accent: #a9c27a;
+  --accent-soft: rgba(169, 194, 122, 0.12);
+  --chip: #262a1d;
+  --chip-hover: #33392a;
+  --mark: #4a4520;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 Georgia, "Times New Roman", serif;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 28px; margin: 0 0 4px; font-weight: normal; }
+.sub { color: var(--muted); margin: 0 0 20px; }
+.sub b { color: var(--ink); font-weight: normal; }
+.how { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 15px; }
+.how summary { cursor: pointer; color: var(--accent); }
+.how code, .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+.how code { background: var(--chip); padding: 1px 4px; border-radius: 3px; overflow-wrap: anywhere; }
+.bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; position: sticky; top: 0; background: var(--bg); padding: 8px 0; z-index: 2; border-bottom: 1px solid var(--line); }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tab { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 6px 12px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 15px; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.tab .n { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.tab[aria-selected="true"] .n { color: inherit; opacity: .8; }
+input[type="search"] { flex: 1 1 260px; min-width: 0; font: inherit; padding: 7px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
+.status { color: var(--muted); font-size: 14px; margin: 12px 0; }
+.topic { border-bottom: 1px solid var(--line); }
+.topic > button, .group > button {
+  all: unset; box-sizing: border-box; display: flex; gap: 12px; align-items: baseline; width: 100%; padding: 10px 4px; cursor: pointer;
+}
+.topic > button:focus-visible, .group > button:focus-visible { outline: 2px solid var(--accent); }
+.topic > button:hover, .group > button:hover { background: var(--accent-soft); }
+.caret { width: 12px; color: var(--muted); flex: none; transition: transform .15s; }
+[aria-expanded="true"] > .caret { transform: rotate(90deg); }
+.tl { flex: 1; min-width: 0; }
+.tl .name { font-size: 17px; }
+.tl .id { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.tl .groups { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { color: var(--muted); font-size: 13px; text-align: right; white-space: nowrap; flex: none; }
+.f { display: inline-block; min-width: 18px; text-align: center; font-size: 11px; border: 1px solid var(--line); border-radius: 3px; margin-left: 2px; padding: 0 3px; text-transform: uppercase; }
+.body { padding: 0 0 12px 24px; }
+.group { border-left: 2px solid var(--line); margin: 2px 0; }
+.group > button { padding: 6px 8px; }
+.group .tl .name { font-size: 15px; }
+.examples { padding: 4px 8px 10px 30px; }
+.concept { padding: 6px 0; border-top: 1px dashed var(--line); }
+.concept:first-child { border-top: 0; }
+.cname { font-size: 14px; overflow-wrap: anywhere; }
+.cname .econ { color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.chip { all: unset; cursor: copy; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; background: var(--chip); padding: 2px 7px; border-radius: 4px; }
+.chip:hover { background: var(--chip-hover); }
+.chip:focus-visible { outline: 2px solid var(--accent); }
+.chip .fq { color: var(--muted); margin-left: 4px; }
+.more { all: unset; cursor: pointer; color: var(--accent); font-size: 14px; padding: 6px 0; display: inline-block; }
+.more:hover { text-decoration: underline; }
+.facet { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; font-size: 14px; color: var(--muted); }
+select { font: inherit; font-size: 14px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); max-width: 100%; }
+mark { background: var(--mark); color: inherit; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px); overflow-wrap: anywhere; }
+.toast.on { opacity: 1; }
+.hits .hit { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+@media (max-width: 640px) {
+  .meta .span { display: none; }
+  .body { padding-left: 8px; }
+  .examples { padding-left: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Data guide</h1>
+  <p class="sub" id="sub">Loading the catalogue…</p>
+
+  <details class="how">
+    <summary>How the names work, and how to fetch a series</summary>
+    <p>Every series name is a path from general to specific, separated by commas:
+      <code>China, CPI, Food, % YoY, 3mma</code>. This guide groups names by topic and folds the
+      transformations and units at the end (<code>% YoY</code>, <code>3mma</code>, <code>SA</code>,
+      <code>USD bn</code>…) into chips under each concept. Click a chip to copy its full name.</p>
+    <p>Fetch it with <code>/series?columns=NAME&amp;freq=m</code> (separate several names with
+      <code>;</code>) and your API key in an <code>X-API-Key</code> header. Frequencies:
+      <span class="f">d</span> daily, <span class="f">w</span> weekly, <span class="f">m</span> monthly,
+      <span class="f">q</span> quarterly, <span class="f">a</span> annual. Cross-country topics show an
+      economy picker; one concept is shown once rather than once per economy.</p>
+  </details>
+
+  <div class="bar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <input type="search" id="q" placeholder="Filter topics and groups, e.g. CPI, exports, wages" aria-label="Filter">
+  </div>
+  <div class="status" id="status"></div>
+  <div id="list"></div>
+  <div class="hits" id="hits"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const API = (params.get('api') || '').replace(/\/$/, '');
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, attrs = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'class') n.className = v;
+      else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+      else if (v !== null && v !== undefined) n.setAttribute(k, v);
+    }
+    for (const k of kids.flat()) if (k !== null && k !== undefined) n.append(k.nodeType ? k : document.createTextNode(k));
+    return n;
+  };
+  const fmt = (n) => n.toLocaleString('en-GB');
+  const yr = (d) => (d || '').slice(0, 4);
+  const span = (o) => o.min ? `${yr(o.min)}–${yr(o.max)}` : '';
+  const freqs = (fs) => fs.map((f) => el('span', { class: 'f' }, f));
+  const get = async (path) => {
+    const r = await fetch(API + path);
+    if (!r.ok) throw new Error(`${r.status} ${path}`);
+    return r.json();
+  };
+
+  let toastT;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => t.classList.remove('on'), 1600);
+  }
+  async function copy(name) {
+    try { await navigator.clipboard.writeText(name); toast('Copied: ' + name); }
+    catch (e) { window.prompt('Copy this name', name); }
+  }
+
+  let cat = null, econ = null, filter = '';
+  const topicCache = {};
+  const remember = (k, v) => { try { localStorage.setItem('eae-guide-' + k, v); } catch (e) {} };
+  const recall = (k) => { try { return localStorage.getItem('eae-guide-' + k); } catch (e) { return null; } };
+
+  function chipsFor(variants) {
+    return el('div', { class: 'chips' }, variants.map((v) => {
+      const name = typeof v === 'string' ? null : v.name;
+      const label = typeof v === 'string' ? v : v.variant;
+      const b = el('button', { class: 'chip', title: name ? 'Copy ' + name : label },
+        label, name && v.freqs ? el('span', { class: 'fq' }, v.freqs.join('')) : null);
+      if (name) b.addEventListener('click', () => copy(name));
+      else b.style.cursor = 'default';
+      return b;
+    }));
+  }
+
+  // Examples stored in the topic file: concept names + variant labels
+  function exampleBlock(examples) {
+    return el('div', {}, examples.map((x) =>
+      el('div', { class: 'concept' }, el('div', { class: 'cname' }, x.name),
+        chipsFor(x.variants.map((v) => ({ variant: v, name: v === 'Level' ? x.name : x.name + ', ' + v }))))));
+  }
+
+  // Full listing for a node, paged, with an economy picker on cross-country topics
+  function seriesPanel(topic, group, subgroup, node) {
+    const box = el('div');
+    const list = el('div');
+    let economy = null, offset = 0;
+    const pageSize = 50;
+    async function load(reset) {
+      if (reset) { offset = 0; list.replaceChildren(); }
+      const qs = new URLSearchParams({ topic, group, limit: pageSize, offset });
+      if (subgroup) qs.set('subgroup', subgroup);
+      if (economy) qs.set('economy', economy);
+      const more = el('span', { class: 'status' }, 'Loading…');
+      list.append(more);
+      try {
+        const r = await get('/catalog/series?' + qs);
+        more.remove();
+        if (r.economies.length && !box.querySelector('select')) {
+          const sel = el('select', { 'aria-label': 'Economy' },
+            el('option', { value: '' }, `All ${r.economies.length} economies`),
+            r.economies.map((e) => el('option', { value: e }, e)));
+          sel.addEventListener('change', () => { economy = sel.value || null; load(true); });
+          box.prepend(el('div', { class: 'facet' }, 'Economy', sel));
+        }
+        for (const c of r.items) {
+          list.append(el('div', { class: 'concept' },
+            el('div', { class: 'cname' }, c.concept,
+              el('span', { class: 'meta' }, '  ', span(c.variants[0]))),
+            chipsFor(c.variants)));
+        }
+        offset += r.items.length;
+        if (offset < r.total) {
+          list.append(el('button', { class: 'more', onclick: (e) => { e.target.remove(); load(false); } },
+            `Show more (${fmt(r.total - offset)} left)`));
+        } else if (!r.total) {
+          list.append(el('div', { class: 'status' }, 'Nothing here.'));
+        }
+      } catch (e) {
+        more.textContent = 'Could not load: ' + e.message;
+      }
+    }
+    box.append(list);
+    load(true);
+    return box;
+  }
+
+  function nodeRow(topic, g, parentGroup) {
+    const group = parentGroup || g.name;
+    const subgroup = parentGroup ? g.name : null;
+    const wrap = el('div', { class: 'group' });
+    const btn = el('button', { 'aria-expanded': 'false' },
+      el('span', { class: 'caret' }, '▸'),
+      el('span', { class: 'tl' }, el('span', { class: 'name' }, g.name),
+        g.economies ? el('span', { class: 'id' }, `${fmt(g.economies)} economies`) : null),
+      el('span', { class: 'meta' }, `${fmt(g.concepts)} concepts · `, el('span', { class: 'span' }, span(g), ' '), freqs(g.freqs)));
+    const body = el('div', { class: 'examples', hidden: '' });
+    btn.addEventListener('click', () => {
+      const open = btn.getAttribute('aria-expanded') !== 'true';
+      btn.setAttribute('aria-expanded', open);
+      body.hidden = !open;
+      if (open && !body.childElementCount) {
+        if (g.sub && g.sub.length) {
+          body.append(...g.sub.map((s) => nodeRow(topic, s, g.name)));
+          body.append(el('button', { class: 'more', onclick: (e) => { e.target.replaceWith(seriesPanel(topic, group, null, g)); } },
+            `List all ${fmt(g.concepts)} concepts in ${g.name}`));
+        } else {
+          if (g.examples) body.append(exampleBlock(g.examples));
+          if (!g.examples || g.concepts > g.examples.length || g.economies) {
+            body.append(el('button', { class: 'more', onclick: (e) => { e.target.replaceWith(seriesPanel(topic, group, subgroup, g)); } },
+              g.concepts > (g.examples || []).length ? `List all ${fmt(g.concepts)} concepts` : 'List with exact names and dates'));
+          }
+        }
+      }
+    });
+    wrap.append(btn, body);
+    return wrap;
+  }
+
+  function topicRow(t) {
+    const wrap = el('div', { class: 'topic', 'data-id': t.id });
+    const btn = el('button', { 'aria-expanded': 'false' },
+      el('span', { class: 'caret' }, '▸'),
+      el('span', { class: 'tl' },
+        el('span', { class: 'name' }, t.label), el('span', { class: 'id mono' }, t.id),
+        el('div', { class: 'groups' }, t.groups.slice(0, 8).map((g) => g.name).join(' · '))),
+      el('span', { class: 'meta' }, `${fmt(t.concepts)} concepts`, el('br'),
+        el('span', { class: 'span' }, span(t), ' '), freqs(t.freqs)));
+    const body = el('div', { class: 'body', hidden: '' });
+    btn.addEventListener('click', async () => {
+      const open = btn.getAttribute('aria-expanded') !== 'true';
+      btn.setAttribute('aria-expanded', open);
+      body.hidden = !open;
+      if (open && !body.childElementCount) {
+        body.append(el('div', { class: 'status' }, 'Loading…'));
+        try {
+          const full = topicCache[t.id] || (topicCache[t.id] = await get('/catalog/topics/' + encodeURIComponent(t.id)));
+          const lead = [full.home, full.prefix].filter(Boolean).join(', ');
+          body.replaceChildren(
+            ...(lead ? [el('div', { class: 'status' }, 'Names start ', el('code', { class: 'mono' }, lead + ', …'),
+              full.economies ? ` · ${fmt(full.economies)} economies` : '')] : []),
+            ...full.groups.map((g) => nodeRow(t.id, g)));
+        } catch (e) {
+          body.replaceChildren(el('div', { class: 'status' }, 'Could not load: ' + e.message));
+        }
+      }
+    });
+    wrap.append(btn, body);
+    return wrap;
+  }
+
+  function render() {
+    const e = cat.economies.find((x) => x.code === econ) || cat.economies[0];
+    const f = filter.toLowerCase();
+    const topics = e.topics.filter((t) => !f ||
+      t.label.toLowerCase().includes(f) || t.id.includes(f) ||
+      t.groups.some((g) => g.name.toLowerCase().includes(f)));
+    $('#status').textContent = f
+      ? `${topics.length} of ${e.topics.length} ${e.name} topics match “${filter}”.`
+      : `${e.topics.length} topics · ${fmt(e.concepts)} concepts · ${fmt(e.series)} series`;
+    $('#list').replaceChildren(...topics.map(topicRow));
+    searchNames();
+  }
+
+  // When the filter is a few words, also look across every series name in this economy
+  let searchT;
+  function searchNames() {
+    clearTimeout(searchT);
+    const box = $('#hits');
+    box.replaceChildren();
+    if (filter.length < 3) return;
+    searchT = setTimeout(async () => {
+      try {
+        const r = await get(`/search?q=${encodeURIComponent(filter)}&country=${econ}&limit=20`);
+        if (!r.results.length) return;
+        box.append(el('h2', { class: 'status' }, `Series names containing “${filter}” (first ${r.results.length})`),
+          ...r.results.map((x) => el('div', { class: 'hit' },
+            chipsFor([{ variant: x.name, name: x.name, freqs: x.frequencies }]))));
+      } catch (e) { /* search is a bonus; the topic filter still works */ }
+    }, 350);
+  }
+
+  function tabs() {
+    $('#tabs').replaceChildren(...cat.economies.map((e) => {
+      const b = el('button', { class: 'tab', role: 'tab', 'aria-selected': String(e.code === econ) },
+        e.name, el('span', { class: 'n' }, fmt(e.concepts)));
+      b.addEventListener('click', () => { econ = e.code; remember('econ', econ); tabs(); render(); });
+      return b;
+    }));
+  }
+
+  get('/catalog').then((c) => {
+    cat = c;
+    const want = params.get('economy') || recall('econ');
+    econ = cat.economies.some((e) => e.code === want) ? want : cat.economies[0].code;
+    $('#sub').replaceChildren(
+      el('b', {}, fmt(cat.series)), ' series, which fold into ', el('b', {}, fmt(cat.concepts)),
+      ' distinct concepts across ', el('b', {}, String(cat.economies.reduce((n, e) => n + e.topics.length, 0))),
+      ' topics.', cat.built ? ` Updated ${cat.built}.` : '');
+    tabs();
+    filter = params.get('q') || '';
+    $('#q').value = filter;
+    render();
+  }).catch((e) => {
+    $('#sub').textContent = 'The catalogue could not be loaded (' + e.message + ').';
+  });
+
+  let filterT;
+  $('#q').addEventListener('input', (ev) => {
+    clearTimeout(filterT);
+    filterT = setTimeout(() => { filter = ev.target.value.trim(); render(); }, 150);
+  });
+})();
+</script>
+</body>
+</html>

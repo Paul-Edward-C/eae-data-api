@@ -31,6 +31,8 @@ from pathlib import Path
 
 import pandas as pd
 
+import catalog
+
 # Configuration
 LOCAL_DATA_ROOTS = {
     'cn': '/Users/paul/Documents/DATA/cn/cn_input',
@@ -233,6 +235,21 @@ def create_stats_table(conn):
 
     conn.commit()
     print(f"Stats: {total_series:,} series, {total_data_points:,} data points")
+
+
+def create_catalog_table(conn):
+    """Build the browsable series guide (see catalog.py) and store it in the DB, so it
+    ships to R2 with the data and /catalog always matches what /series can serve.
+    Patterns in hidden_series.json are left out, as /search does for public users."""
+    print("Building catalogue...")
+    try:
+        with open(Path(__file__).parent / 'hidden_series.json') as fh:
+            hidden = json.load(fh).get('hidden_patterns', [])
+    except (OSError, ValueError):
+        hidden = []
+    cat = catalog.build_catalog(conn, hidden)
+    catalog.store_catalog(conn, cat)
+    print(f"Catalogue: {cat['concepts']:,} concepts, {cat['series']:,} series")
 
 
 def load_parquet_file(conn, filepath, country, frequency, source_file):
@@ -490,6 +507,7 @@ def incremental_update(conn, countries):
     # Rebuild FTS and stats
     create_indexes(conn)
     create_stats_table(conn)
+    create_catalog_table(conn)
 
     print(f"\nIncremental update complete: {total_series} series from {len(changed)} files")
 
@@ -546,6 +564,7 @@ def full_rebuild(conn, countries):
 
     create_indexes(conn)
     create_stats_table(conn)
+    create_catalog_table(conn)
 
     # Restore safe pragmas for normal operation
     conn.execute('PRAGMA journal_mode=WAL')

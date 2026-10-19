@@ -230,6 +230,10 @@ uvicorn api:app --reload --port 8000
 | `GET /countries` | List countries |
 | `GET /frequencies` | List frequencies |
 | `GET /info/{series_name}` | Series metadata |
+| `GET /guide` | Browsable guide to every series (HTML) |
+| `GET /catalog` | Guide index: economy → topic → group, with counts, frequencies, date spans |
+| `GET /catalog/topics/{topic}` | One topic in full: groups, subgroups, example concepts |
+| `GET /catalog/series?topic=&group=&subgroup=&economy=` | Every series under a guide node, with exact names |
 | `GET /docs` | Swagger UI |
 
 ### Authenticated (API key or Ghost token)
@@ -248,6 +252,29 @@ uvicorn api:app --reload --port 8000
 |----------|-------------|
 | `POST /admin/refresh-db` | Re-download database from R2 |
 | `POST /admin/reload-hidden-series` | Reload hidden series config |
+
+### Series guide (`/guide`)
+
+1.4M series rows fold into ~350k *concepts* once the trailing transforms and unit
+(`% YoY`, `3mma`, `SA`, `USD bn`, `% of GDP` …) are treated as variants of one thing.
+`catalog.py` builds that tree after every database build (`update_db.py` calls
+`create_catalog_table`) and stores it in a `catalog` table, so it ships to R2 with the
+data and is always in step with what `/series` can serve. Series matching
+`hidden_series.json` are left out.
+
+- **Topics** are source parquet files with the frequency suffix dropped (`cn_cpi_m` +
+  `cn_cpi_a` → `cn_cpi`). Their display names live in `topic_labels.json`; a new
+  parquet with no label falls back to its file name until one is added.
+- **Groups / subgroups** are the next two name segments after the prefix every name in
+  the topic shares (a leading home-economy segment such as `Japan, ` is ignored).
+- **Economy facet**: in cross-country files (CEPII, TiVA, UNCTAD, trade partners) the
+  segment holding an economy name is pulled out, so a concept appears once with an
+  economy picker rather than once per country. Economy names come from `pycountry` plus
+  a hand list, and names it misses (`Hong Kong SAR`, `Yemen, Arab Republic`) are learnt
+  from the shape of the surrounding path.
+
+The page is `guide.html`, served by the API. To embed it elsewhere, load it with
+`?api=https://<api host>`; `?economy=jp&q=wages` pre-selects a tab and filter.
 
 ### Column name separator
 

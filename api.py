@@ -6,6 +6,7 @@ SQLite-only backend.
 """
 
 from fastapi import FastAPI, HTTPException, Query, Depends, Header
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from collections import defaultdict
@@ -18,6 +19,7 @@ import os
 from pathlib import Path
 
 import sqlite_data_access as sda
+import catalog as series_catalog
 import api_keys
 import packs as chart_packs
 
@@ -428,6 +430,10 @@ async def root():
         },
         "tier_limits": TIER_LIMITS,
         "endpoints": {
+            "guide": "/guide",
+            "catalog": "/catalog",
+            "catalog_topic": "/catalog/topics/{topic}",
+            "catalog_series": "/catalog/series?topic={topic}&group={group}&subgroup={subgroup}&economy={economy}",
             "search": "/search?q={pattern}&freq={m|q|a}&country={cn|jp|kr|tw|region}",
             "series": "/series/{series_name}?freq={m|q|a}&start={date}&end={date}",
             "multi_series": "/series?columns={name1;name2;name3}&freq={m|q|a}&start={date}&end={date}",
@@ -763,6 +769,66 @@ async def get_chart_pack(
         "your_tier": have or "public",
         "pack": data,
     }
+
+
+# =============================================================================
+# Series guide — public, names only (the data itself stays behind /series)
+# =============================================================================
+
+def _catalog_or_503():
+    cat = sda.get_catalog()
+    if cat is None:
+        raise HTTPException(status_code=503, detail="Series catalogue not built yet: run update_db.py and refresh")
+    return cat
+
+
+@app.get("/guide", include_in_schema=False)
+async def series_guide():
+    """Browsable guide to every series (HTML page over the /catalog endpoints)."""
+    return FileResponse(Path(__file__).parent / 'guide.html', media_type='text/html')
+
+
+@app.get("/catalog")
+async def get_catalog_index():
+    """
+    What data is available: economy -> topic -> group, with counts, frequencies and
+    date spans. Transforms (% YoY, 3mma, SA ...) and units are folded into each
+    concept, so `concepts` is the number of distinct things and `series` the number
+    of names you can request. Expand a topic with /catalog/topics/{topic}.
+    """
+    return series_catalog.catalog_index(_catalog_or_503())
+
+
+@app.get("/catalog/topics/{topic}")
+async def get_catalog_topic(topic: str):
+    """One topic in full: groups, subgroups and example concepts with their variants."""
+    t = series_catalog.catalog_topic(_catalog_or_503(), topic)
+    if t is None:
+        raise HTTPException(status_code=404, detail=f"No such topic: {topic}")
+    return t
+
+
+@app.get("/catalog/series")
+async def get_catalog_series(
+    topic: str = Query(..., description="Topic id, e.g. cn_gdp"),
+    group: str = Query(..., description="Group name from /catalog"),
+    subgroup: Optional[str] = Query(None, description="Subgroup name from /catalog/topics/{topic}"),
+    economy: Optional[str] = Query(None, description="Economy facet, for cross-country topics"),
+    q: Optional[str] = Query(None, description="Filter on the full series name (case-insensitive)"),
+    limit: int = Query(100, le=500),
+    offset: int = Query(0, ge=0),
+):
+    """
+    Every series under one guide node, grouped by concept. Each variant carries the
+    exact name to pass to /series?columns=, its frequencies and its date span.
+    """
+    cat = _catalog_or_503()
+    out = series_catalog.node_series(sda.get_connection(), cat, topic, group, subgroup=subgroup,
+                                     economy=economy, q=q, hidden_patterns=_hidden_patterns,
+                                     limit=limit, offset=offset)
+    if out is None:
+        raise HTTPException(status_code=404, detail=f"No such topic: {topic}")
+    return out
 
 
 @app.get("/stats")
