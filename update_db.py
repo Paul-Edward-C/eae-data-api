@@ -471,6 +471,8 @@ def incremental_update(conn, countries):
 
     if not changed and not removed:
         print("\nNothing to update.")
+        if catalog.load_catalog(conn) is None:   # first run after the catalogue was introduced
+            create_catalog_table(conn)
         return
 
     # Remove data for files that no longer exist
