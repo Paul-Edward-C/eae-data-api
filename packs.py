@@ -14,11 +14,25 @@ Tiers, in ascending order:
     premium  all 55 packs, for "Daily + Data" and "East Asia"
 
 The ranking is inclusive — a premium member reaches everything below them.
+
+Where the pack contents come from. packs/*.json in this repo are only each pack's
+STRUCTURE (section titles and chart ids), not the chart values, so serving them gave
+subscribers empty packs. The full packs are built by chartsite's publish.sh and
+uploaded to R2 as one gzipped bundle, next to data.db — never committed here, because
+this repository is public and committing them would publish what the tier check is
+there to protect. The bundle is fetched on first use and re-fetched on
+POST /admin/refresh-packs; packs/ is kept only as a fallback for a pack the bundle
+lacks.
 """
+import gzip
 import json
 import os
+import threading
+import time
 from pathlib import Path
 from typing import Optional
+
+import sqlite_data_access as sda
 
 # Where the generated packs live. Set PACKS_DIR to point at a checkout of
 # ghost/chartsite/data/packs, or sync them in with scripts/sync_packs.py.
@@ -81,14 +95,103 @@ def pack_path(pack_id: str) -> Optional[Path]:
     return p if p.is_file() else None
 
 
+# --------------------------------------------------------------------------- bundle
+
+BUNDLE_KEY = os.environ.get('PACKS_R2_KEY', 'chart_packs.json.gz')
+BUNDLE_PATH = sda.DB_PATH.parent / 'chart_packs.json.gz'   # on the Railway volume
+RETRY_AFTER = 300            # seconds between download attempts after a failure
+
+_bundle = None               # {'built': str, 'packs': {id: pack}, 'bytes': {id: int}}
+_bundle_lock = threading.RLock()
+_last_attempt = 0.0
+
+
+def _read_bundle(path: Path) -> dict:
+    """Parse and sanity-check a bundle file. Raises on anything malformed."""
+    with gzip.open(path, 'rt', encoding='utf-8') as fh:
+        doc = json.load(fh)
+    packs = doc.get('packs')
+    if not isinstance(packs, dict) or not packs:
+        raise ValueError('bundle has no packs')
+    for pid, pack in packs.items():
+        if not isinstance(pack, dict) or not isinstance(pack.get('charts'), dict):
+            raise ValueError(f'pack {pid} has no charts')
+    doc['bytes'] = {pid: len(json.dumps(p, separators=(',', ':'))) for pid, p in packs.items()}
+    return doc
+
+
+def _download_bundle() -> None:
+    """Fetch the bundle from R2 to a temporary file, check it, then swap it in."""
+    import boto3
+    from botocore.config import Config
+
+    client = boto3.client(
+        's3',
+        endpoint_url=f'https://{sda.R2_ENDPOINT}',
+        aws_access_key_id=os.environ.get('R2_ACCESS_KEY_ID') or os.environ.get('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.environ.get('R2_SECRET_ACCESS_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        region_name='auto',
+        config=Config(signature_version='s3v4'),
+    )
+    BUNDLE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = BUNDLE_PATH.with_name(BUNDLE_PATH.name + '.download')
+    try:
+        client.download_file(sda.R2_BUCKET, BUNDLE_KEY, str(tmp))
+        _read_bundle(tmp)                    # a bad upload never replaces a good bundle
+        os.replace(tmp, BUNDLE_PATH)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
+def refresh_bundle() -> dict:
+    """Re-download the bundle and swap it in. Returns {'packs': n, 'built': ...}."""
+    global _bundle, _last_attempt
+    with _bundle_lock:
+        _last_attempt = time.time()
+        _download_bundle()
+        _bundle = _read_bundle(BUNDLE_PATH)
+        return {'packs': len(_bundle['packs']), 'built': _bundle.get('built')}
+
+
+def _get_bundle() -> Optional[dict]:
+    """The bundle in memory, loading it from the volume or R2 on first use. None if
+    neither has one; a failed download is not retried for RETRY_AFTER seconds, so a
+    missing bundle cannot turn every request into an R2 call."""
+    global _bundle, _last_attempt
+    if _bundle is not None:
+        return _bundle
+    with _bundle_lock:
+        if _bundle is not None:
+            return _bundle
+        try:
+            if BUNDLE_PATH.exists():
+                _bundle = _read_bundle(BUNDLE_PATH)
+                return _bundle
+        except Exception as e:                # corrupt copy on the volume: fetch afresh
+            print(f'Chart pack bundle unreadable, re-downloading: {e}')
+        if time.time() - _last_attempt < RETRY_AFTER:
+            return None
+        try:
+            refresh_bundle()
+        except Exception as e:
+            print(f'Could not load the chart pack bundle from R2: {e}')
+        return _bundle
+
+
+# --------------------------------------------------------------------------- packs
+
 def list_packs() -> list:
-    """Every pack on disk with the tier it needs. Safe to serve unauthenticated —
+    """Every pack with the tier it needs. Safe to serve unauthenticated —
     it is the catalogue, not the contents, and the site needs it to draw the locks."""
-    if not PACKS_DIR.is_dir():
-        return []
+    sizes = {}
+    if PACKS_DIR.is_dir():
+        sizes = {f.stem: f.stat().st_size for f in PACKS_DIR.glob('*.json')}
+    bundle = _get_bundle()
+    if bundle:
+        sizes.update(bundle['bytes'])
     out = []
-    for f in sorted(PACKS_DIR.glob('*.json')):
-        pid = f.stem
+    for pid in sorted(sizes):
         economy, _, pack = pid.partition('-')
         tier = required_tier(pid)
         out.append({
@@ -97,12 +200,15 @@ def list_packs() -> list:
             'pack': pack,
             'required_tier': tier,
             'label': TIER_LABEL[tier],
-            'bytes': f.stat().st_size,
+            'bytes': sizes[pid],
         })
     return out
 
 
 def load_pack(pack_id: str) -> Optional[dict]:
+    bundle = _get_bundle()
+    if bundle and pack_id in bundle['packs']:
+        return bundle['packs'][pack_id]
     p = pack_path(pack_id)
     if p is None:
         return None

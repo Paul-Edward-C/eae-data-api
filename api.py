@@ -1037,6 +1037,19 @@ async def reload_hidden_series(user: dict = Depends(get_current_user)):
     }
 
 
+@app.post("/admin/refresh-packs")
+async def refresh_chart_packs(user: dict = Depends(get_current_user)):
+    """Re-download the chart pack bundle from R2 (admin only). Called by chartsite's
+    publish.sh after it uploads a new build, before the site itself is deployed."""
+    if not is_admin_user(user):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    try:
+        result = chart_packs.refresh_bundle()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to refresh chart packs: {e}")
+    return {"status": "success", **result}
+
+
 @app.post("/admin/refresh-db")
 async def refresh_database(user: dict = Depends(get_current_user)):
     """Delete local data.db and re-download from R2 (admin only)."""
