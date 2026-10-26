@@ -12,8 +12,9 @@ from typing import List, Optional
 from collections import defaultdict
 from datetime import datetime, timedelta
 import json
+import time
+
 import jwt
-from jwt.exceptions import PyJWKClientError
 import requests
 import os
 from pathlib import Path
@@ -148,26 +149,54 @@ request_counts = defaultdict(lambda: {'count': 0, 'reset': datetime.now()})
 # unverified decode only if something is wrong in production — it is not safe.
 GHOST_VERIFY_TOKENS = os.environ.get('GHOST_VERIFY_TOKENS', '1') != '0'
 GHOST_ALGORITHMS = ['RS256', 'RS384', 'RS512', 'PS256', 'PS384', 'PS512']
-_jwks_client = None
+JWKS_TTL = 3600                  # seconds a fetched key set is trusted before refetching
+_jwks = {'keys': None, 'at': 0.0}
 
 
-def _get_jwks_client():
-    """Cached JWKS client. PyJWKClient caches fetched keys internally."""
-    global _jwks_client
-    if _jwks_client is None and GHOST_URL:
-        from jwt import PyJWKClient
-        _jwks_client = PyJWKClient(f"{GHOST_URL.rstrip('/')}/members/.well-known/jwks.json")
-    return _jwks_client
+def _jwks_url() -> str:
+    return f"{GHOST_URL.rstrip('/')}/members/.well-known/jwks.json"
+
+
+def _fetch_jwks(force: bool = False) -> dict:
+    """{kid: public key} from Ghost, cached for JWKS_TTL.
+
+    Fetched with requests rather than PyJWKClient: PyJWKClient uses urllib with a
+    'Python-urllib' user-agent, and from Railway that fetch failed on every request
+    (PyJWKClientConnectionError) while the same URL answered from elsewhere, so no
+    signed-in member ever got past verification and every gated pack stayed locked.
+    A browser-style user-agent, followed redirects and an explicit timeout avoid the
+    usual causes, and the real error now reaches /auth/whoami."""
+    if not force and _jwks['keys'] is not None and time.time() - _jwks['at'] < JWKS_TTL:
+        return _jwks['keys']
+    r = requests.get(_jwks_url(), timeout=10, headers={
+        'User-Agent': 'Mozilla/5.0 (compatible; eae-data-api)',
+        'Accept': 'application/json'})
+    r.raise_for_status()
+    keys = {k['kid']: jwt.PyJWK(k).key for k in r.json().get('keys', []) if k.get('kid')}
+    if not keys:
+        raise jwt.InvalidTokenError('Ghost published no signing keys')
+    _jwks.update(keys=keys, at=time.time())
+    return keys
+
+
+def _signing_key(token: str):
+    """Ghost's public key for this token's kid, refetching once if the kid is new."""
+    if not GHOST_URL:
+        raise jwt.InvalidTokenError('No GHOST_URL configured; cannot verify token')
+    kid = jwt.get_unverified_header(token).get('kid')
+    keys = _fetch_jwks()
+    if kid not in keys:                        # Ghost may have rotated its key
+        keys = _fetch_jwks(force=True)
+    if kid not in keys:
+        raise jwt.InvalidTokenError(f'no Ghost signing key with kid {kid}')
+    return keys[kid]
 
 
 def _decode_ghost_token(token: str) -> dict:
     """Decode a Ghost member token, verifying the signature unless disabled."""
     if not GHOST_VERIFY_TOKENS:
         return jwt.decode(token, options={"verify_signature": False})
-    client = _get_jwks_client()
-    if client is None:
-        raise jwt.InvalidTokenError('No GHOST_URL configured; cannot verify token')
-    signing_key = client.get_signing_key_from_jwt(token)
+    key = _signing_key(token)
     # Ghost sets aud to the site origin, which varies by deployment, so the
     # audience is not checked; the signature and expiry are what matter here.
     # Allow the RSA family rather than RS256 alone -- Ghost does not always use
@@ -177,7 +206,7 @@ def _decode_ghost_token(token: str) -> dict:
     # the public key). Every entry here still requires Ghost's RSA public key.
     return jwt.decode(
         token,
-        signing_key.key,
+        key,
         algorithms=GHOST_ALGORITHMS,
         options={'verify_aud': False, 'verify_exp': True},
     )
@@ -206,9 +235,9 @@ def get_ghost_member(token: str) -> Optional[dict]:
         # covers DecodeError, ExpiredSignatureError, InvalidSignatureError
         print(f"Ghost token rejected: {type(e).__name__}")
         return None
-    except PyJWKClientError as e:
-        # unknown key id -- a token Ghost did not sign
-        print(f"Ghost token rejected: no matching signing key")
+    except requests.RequestException as e:
+        # could not reach Ghost's key set -- not the member's fault, so say so
+        print(f"Ghost signing keys unavailable from {_jwks_url()}: {e}")
         return None
     except Exception as e:
         print(f"Ghost auth error: {e}")
@@ -685,6 +714,8 @@ async def whoami(authorization: Optional[str] = Header(None),
     except Exception as e:
         out["stage"] = "token_rejected"
         out["detail"] = type(e).__name__
+        out["detail_message"] = str(e)[:300]   # e.g. the HTTP status from Ghost
+        out["jwks_url"] = _jwks_url()          # the public key URL, not a secret
         return out
 
     email = decoded.get('sub') or decoded.get('email')
