@@ -1152,7 +1152,7 @@ async def list_dashboards(user: Optional[dict] = Depends(get_optional_user)):
 async def get_dashboard(economy: str, page: str, user: Optional[dict] = Depends(get_optional_user)):
     """One dashboard page: front pages ('index') for Daily and above, topic pages for Daily + Data and above."""
     have = (user or {}).get('access') if user else None
-    if not dashboards.can_view(economy, page, have):
+    if not dashboards.can_view(economy, page, have) or (page == 'taste' and user is None):
         _locked(user, dashboards.required_access(economy, page), {"economy": economy, "page": page})
     data = dashboards.load_page(economy, page)
     if data is None:

@@ -29,12 +29,15 @@ from typing import Optional
 import sqlite_data_access as sda
 
 ACCESS_RANK = {'free': 0, 'daily': 1, 'premium': 2, 'full': 3}
-ACCESS_LABEL = {'daily': 'Daily', 'premium': 'Daily + Data', 'full': 'East Asia'}
+ACCESS_LABEL = {'free': 'Free membership', 'daily': 'Daily', 'premium': 'Daily + Data', 'full': 'East Asia'}
 ECONOMIES = {'jp', 'kr', 'tw', 'cn', 'region'}
 
 
 def required_access(economy: str, page: str) -> str:
-    """Front pages ('index') are Daily; topic pages are Daily + Data."""
+    """Front pages ('index') are Daily; topic pages are Daily + Data; the members page's 'taste' (region/taste: the
+    Region headline tiles) is for any signed-in member, free included - api.py turns anonymous readers away."""
+    if page == 'taste':
+        return 'free'
     return 'daily' if page == 'index' else 'premium'
 
 
