@@ -23,6 +23,7 @@ import sqlite_data_access as sda
 import catalog as series_catalog
 import api_keys
 import packs as chart_packs
+import dashboards
 
 # =============================================================================
 # Series Visibility Filter (admin vs public)
@@ -272,11 +273,42 @@ def _determine_tier(member: dict) -> str:
     tier_names = [t.get('name', '').lower() for t in member.get('tiers', [])]
     if any('east asia' in t or 'data' in t for t in tier_names):
         return 'premium'
-    elif any('daily' in t for t in tier_names):
+    elif any('daily' in t or 'individual' in t for t in tier_names):   # Individual: legacy plan, Daily level
         return 'daily'
     elif member.get('status') == 'comped':
         return 'premium'
     return 'free'
+
+
+def _determine_access(member: dict) -> str:
+    """Dashboard access level (dashboards.py): 'full' for East Asia, 'premium' for Daily + Data, 'daily' for
+    Daily and the legacy Individual plan. Separate from the API tier, which also sets usage limits and keys."""
+    tier_names = [t.get('name', '').lower() for t in member.get('tiers', [])]
+    if any('east asia' in t for t in tier_names):
+        return 'full'
+    if any('data' in t for t in tier_names):
+        return 'premium'
+    if any('daily' in t or 'individual' in t for t in tier_names):
+        return 'daily'
+    if member.get('status') == 'comped':
+        return 'premium'
+    return 'free'
+
+
+# A dashboard visit makes several calls (page data, then any notes opened); cache each member briefly rather
+# than asking the Admin API every time. A plan change shows up within MEMBER_TTL seconds.
+_member_cache = {}
+MEMBER_TTL = 300
+
+
+def _ghost_admin_get(path: str, params: dict) -> Optional[dict]:
+    """GET from the Ghost Admin API (server side only)."""
+    token = _get_ghost_admin_token()
+    if not token:
+        return None
+    r = requests.get(f"{GHOST_URL}/ghost/api/admin/{path}", params=params,
+                     headers={"Authorization": f"Ghost {token}", "Accept-Version": "v5.0"}, timeout=15)
+    return r.json() if r.ok else None
 
 
 def _lookup_ghost_member_by_email(email: str) -> Optional[dict]:
@@ -284,6 +316,9 @@ def _lookup_ghost_member_by_email(email: str) -> Optional[dict]:
     Look up a Ghost member by email via the Admin API.
     Returns dict with email, name, tier, uuid — or None if not found.
     """
+    hit = _member_cache.get(email)
+    if hit and time.time() - hit[0] < MEMBER_TTL:
+        return dict(hit[1])
     admin_token = _get_ghost_admin_token()
     if not admin_token:
         return None
@@ -298,12 +333,15 @@ def _lookup_ghost_member_by_email(email: str) -> Optional[dict]:
             members = response.json().get('members', [])
             if members:
                 member = members[0]
-                return {
+                out = {
                     'email': member.get('email', email),
                     'name': member.get('name', ''),
                     'tier': _determine_tier(member),
+                    'access': _determine_access(member),
                     'uuid': member.get('uuid'),
                 }
+                _member_cache[email] = (time.time(), out)
+                return dict(out)
         return None
     except Exception as e:
         print(f"Ghost lookup error: {e}")
@@ -330,6 +368,7 @@ async def get_current_user(
                 'email': key_info['email'],
                 'name': key_info['name'],
                 'tier': key_info['tier'],
+                'access': key_info['tier'] if key_info['tier'] in ('daily', 'premium') else 'free',
                 'uuid': key_info.get('ghost_uuid'),
                 'auth_type': 'user_api_key',
                 'api_key': key_info['api_key']
@@ -349,6 +388,7 @@ async def get_current_user(
             'email': 'api_key_user',
             'name': 'API Key User',
             'tier': 'premium',
+            'access': 'full',
             'uuid': None,
             'auth_type': 'api_key'
         }
@@ -1070,7 +1110,7 @@ async def reload_hidden_series(user: dict = Depends(get_current_user)):
 
 @app.post("/admin/refresh-packs")
 async def refresh_chart_packs(user: dict = Depends(get_current_user)):
-    """Re-download the chart pack bundle from R2 (admin only). Called by chartsite's
+    """Re-download the chart pack bundle (and the dashboard bundle) from R2 (admin only). Called by chartsite's
     publish.sh after it uploads a new build, before the site itself is deployed."""
     if not is_admin_user(user):
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -1078,7 +1118,59 @@ async def refresh_chart_packs(user: dict = Depends(get_current_user)):
         result = chart_packs.refresh_bundle()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to refresh chart packs: {e}")
+    try:
+        result.update(dashboards.refresh_bundle())
+    except Exception as e:                   # the packs still refreshed; say what failed
+        result["dashboards_error"] = str(e)
     return {"status": "success", **result}
+
+
+# =============================================================================
+# Live dashboards (dashboards.py)
+# =============================================================================
+
+def _locked(user, need: str, what: dict):
+    """401 when nobody is signed in, 403 when signed in but on too low a plan - the page shows 'sign in' for one
+    and 'upgrade' for the other."""
+    raise HTTPException(status_code=401 if user is None else 403, detail={
+        "error": "dashboard_locked", **what, "required_access": need,
+        "required_label": dashboards.ACCESS_LABEL.get(need, need),
+        "your_access": (user or {}).get('access', 'free') if user else "anonymous"})
+
+
+@app.get("/dashboards")
+async def list_dashboards(user: Optional[dict] = Depends(get_optional_user)):
+    """The dashboard pages and the access each needs (open: the catalogue, not the contents)."""
+    have = (user or {}).get('access') if user else None
+    items = dashboards.page_list()
+    for it in items:
+        it['accessible'] = dashboards.can_view(it['economy'], it['page'], have)
+    return {"your_access": have or "anonymous", "pages": items}
+
+
+@app.get("/dashboards/{economy}/{page}")
+async def get_dashboard(economy: str, page: str, user: Optional[dict] = Depends(get_optional_user)):
+    """One dashboard page: front pages ('index') for Daily and above, topic pages for Daily + Data and above."""
+    have = (user or {}).get('access') if user else None
+    if not dashboards.can_view(economy, page, have):
+        _locked(user, dashboards.required_access(economy, page), {"economy": economy, "page": page})
+    data = dashboards.load_page(economy, page)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"No such dashboard page: {economy}/{page}")
+    return {"economy": economy, "page": page, "your_access": have, "data": data}
+
+
+@app.get("/notes/{post_id}")
+async def get_note_preview(post_id: str, user: Optional[dict] = Depends(get_optional_user)):
+    """A note's excerpt and charts, for readers who can open the dashboards (Daily and above). East Asia readers
+    are sent to the post itself by the page, but may call this too."""
+    have = (user or {}).get('access') if user else None
+    if dashboards.ACCESS_RANK.get(have or 'free', 0) < dashboards.ACCESS_RANK['daily']:
+        _locked(user, 'daily', {"note": post_id})
+    prev = dashboards.note_preview(post_id, _ghost_admin_get)
+    if prev is None:
+        raise HTTPException(status_code=404, detail=f"No such published note: {post_id}")
+    return {"your_access": have, "note": prev}
 
 
 @app.post("/admin/refresh-db")
