@@ -325,7 +325,9 @@ def _lookup_ghost_member_by_email(email: str) -> Optional[dict]:
 
     try:
         response = requests.get(
-            f"{GHOST_URL}/ghost/api/admin/members/?filter=email:'{email}'",
+            # include=tiers: without it the Admin API returns tiers=[] for EVERY member, so paid members came out
+            # 'free' and comped ones 'premium' (an East Asia comp saw the Daily + Data note previews)
+            f"{GHOST_URL}/ghost/api/admin/members/?filter=email:'{email}'&include=tiers",
             headers={"Authorization": f"Ghost {admin_token}"},
             timeout=10
         )
