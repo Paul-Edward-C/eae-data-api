@@ -237,6 +237,11 @@ def create_stats_table(conn):
     print(f"Stats: {total_series:,} series, {total_data_points:,} data points")
 
 
+# Columns melted per pass. The widest files (kr_trade_m: 865 x 92k) melt to ~80M rows in one go, which exhausted
+# memory and killed the Oct-2026 rebuild; chunking keeps each pass to a few million rows.
+COL_CHUNK = 5000
+
+
 def create_catalog_table(conn):
     """Build the browsable series guide (see catalog.py) and store it in the DB, so it
     ships to R2 with the data and /catalog always matches what /series can serve.
@@ -252,14 +257,15 @@ def create_catalog_table(conn):
     print(f"Catalogue: {cat['concepts']:,} concepts, {cat['series']:,} series")
 
 
-def load_parquet_file(conn, filepath, country, frequency, source_file):
+def load_parquet_file(conn, filepath, country, frequency, source_file, fresh=False):
     """Load a single parquet file into the database.
 
     Uses batch operations for efficiency:
-    - Vectorized metadata computation
+    - Columns processed in chunks of COL_CHUNK to bound memory
     - executemany for series upserts
-    - Bulk DELETE of old data via source_file
-    - Melt + executemany for data inserts
+    - Bulk DELETE of old data for the file's series (skipped when `fresh`: during a full rebuild there is
+      nothing to delete, and `data` has no index yet, so each DELETE would scan the whole table)
+    - Melt + to_sql for data inserts
     """
     try:
         df = pd.read_parquet(filepath)
@@ -270,70 +276,81 @@ def load_parquet_file(conn, filepath, country, frequency, source_file):
         if 'Date' not in df.columns:
             return 0
 
-        df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
+        dates = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
 
         value_cols = [c for c in df.columns if c != 'Date']
         if not value_cols:
             return 0
 
         cursor = conn.cursor()
+        loaded = 0
 
-        # Phase 1: Melt to long format (vectorized, avoids per-column loop)
-        df_long = df.melt(id_vars=['Date'], value_vars=value_cols,
-                          var_name='name', value_name='value')
-        df_long = df_long.dropna(subset=['value'])
+        for start in range(0, len(value_cols), COL_CHUNK):
+            cols = value_cols[start:start + COL_CHUNK]
 
-        if df_long.empty:
-            return 0
+            # Phase 1: Melt to long format (vectorized, avoids per-column loop)
+            part = df[cols].copy()
+            part.insert(0, 'Date', dates.values)
+            df_long = part.melt(id_vars=['Date'], var_name='name', value_name='value')
+            del part
+            df_long = df_long.dropna(subset=['value'])
 
-        # Phase 2: Compute series metadata from melted data
-        meta = df_long.groupby('name', sort=False).agg(
-            min_date=('Date', 'min'),
-            max_date=('Date', 'max'),
-            count=('Date', 'size')
-        )
-        valid_cols = list(meta.index)
+            if df_long.empty:
+                continue
 
-        series_rows = [
-            (name, country, frequency, source_file,
-             row['min_date'], row['max_date'], int(row['count']))
-            for name, row in meta.iterrows()
-        ]
+            # Phase 2: Compute series metadata from melted data
+            meta = df_long.groupby('name', sort=False).agg(
+                min_date=('Date', 'min'),
+                max_date=('Date', 'max'),
+                count=('Date', 'size')
+            )
 
-        # Phase 3: Batch upsert all series
-        cursor.executemany('''
-            INSERT INTO series (name, country, frequency, source_file, min_date, max_date, count)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(name, frequency) DO UPDATE SET
-                country = excluded.country,
-                source_file = excluded.source_file,
-                min_date = excluded.min_date,
-                max_date = excluded.max_date,
-                count = excluded.count
-        ''', series_rows)
+            series_rows = [
+                (name, country, frequency, source_file, mn, mx, int(n))
+                for name, mn, mx, n in zip(meta.index, meta['min_date'], meta['max_date'], meta['count'])
+            ]
 
-        # Phase 4: Get series IDs via source_file lookup
-        cursor.execute(
-            'SELECT name, id FROM series WHERE source_file = ? AND frequency = ?',
-            (source_file, frequency))
-        name_to_id = dict(cursor.fetchall())
+            # Phase 3: Batch upsert the chunk's series
+            cursor.executemany('''
+                INSERT INTO series (name, country, frequency, source_file, min_date, max_date, count)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(name, frequency) DO UPDATE SET
+                    country = excluded.country,
+                    source_file = excluded.source_file,
+                    min_date = excluded.min_date,
+                    max_date = excluded.max_date,
+                    count = excluded.count
+            ''', series_rows)
 
-        # Phase 5: Bulk delete old data for all series from this file
-        series_ids = list(name_to_id.values())
-        for i in range(0, len(series_ids), 500):
-            batch = series_ids[i:i+500]
-            cursor.execute(
-                f'DELETE FROM data WHERE series_id IN ({",".join("?" * len(batch))})',
-                batch)
+            # Phase 4: Get series IDs for this chunk's names
+            name_to_id = {}
+            names = list(meta.index)
+            for i in range(0, len(names), 500):
+                batch = names[i:i+500]
+                cursor.execute(
+                    f'SELECT name, id FROM series WHERE frequency = ? AND name IN ({",".join("?" * len(batch))})',
+                    [frequency, *batch])
+                name_to_id.update(cursor.fetchall())
 
-        # Phase 6: Map series names to IDs and bulk insert data
-        df_long['series_id'] = df_long['name'].map(name_to_id).astype(int)
-        df_insert = df_long[['series_id', 'Date', 'value']].rename(
-            columns={'Date': 'date'})
-        df_insert.to_sql('data', conn, if_exists='append', index=False)
+            # Phase 5: Bulk delete old data for these series
+            if not fresh:
+                series_ids = list(name_to_id.values())
+                for i in range(0, len(series_ids), 500):
+                    batch = series_ids[i:i+500]
+                    cursor.execute(
+                        f'DELETE FROM data WHERE series_id IN ({",".join("?" * len(batch))})',
+                        batch)
+
+            # Phase 6: Map series names to IDs and bulk insert data
+            df_long['series_id'] = df_long['name'].map(name_to_id).astype(int)
+            df_insert = df_long[['series_id', 'Date', 'value']].rename(
+                columns={'Date': 'date'})
+            df_insert.to_sql('data', conn, if_exists='append', index=False, chunksize=200_000)
+            loaded += len(meta)
+            del df_long, df_insert
 
         conn.commit()
-        return len(valid_cols)
+        return loaded
 
     except Exception as e:
         print(f"  Error loading {filepath}: {e}")
@@ -550,7 +567,7 @@ def full_rebuild(conn, countries):
             current_country = country
 
         source_file = str(filepath)
-        count = load_parquet_file(conn, filepath, country, freq, source_file)
+        count = load_parquet_file(conn, filepath, country, freq, source_file, fresh=True)
         if count > 0:
             print(f"  {filepath.name}: {count} series")
             total_series += count
