@@ -8,7 +8,9 @@ access level reaches it. Like the pack bundle it is never committed here: this r
 
 Access levels (api._determine_access), lowest first:
 
-    free     anonymous visitors and free members: nothing here (the members page has its own taste)
+    free     anonymous visitors: nothing. Free members: every page as a PREVIEW (preview_page): the layout, with
+             live tiles only where the chart behind them is in a pack they can open (cn-macro, jp-macro) and on
+             the Markets pages; the rest locked. Also the members page's taste.
     daily    "Daily" (and the legacy "Individual" plan): every economy's FRONT page, plus the Region front page
     premium  "Daily + Data": the front pages and every topic page
     full     "East Asia" and admin: everything, and notes open in full on the site
@@ -123,6 +125,50 @@ def load_page(economy: str, page: str) -> Optional[dict]:
         return None
     b = _get_bundle()
     return (b or {}).get('pages', {}).get(f'{economy}/{page}')
+
+
+# --------------------------------------------------------------------------- preview (signed-in, plan too low)
+
+# Dashboard access -> chart-pack tier (packs.py): what this reader could open in the chart packs anyway.
+PACK_TIER = {'free': 'free', 'daily': 'daily', 'premium': 'premium', 'full': 'premium'}
+
+
+def _open_ref(ref: Optional[str], page: str, access: Optional[str]) -> bool:
+    """A tile or chart ('pack/chart-id') stays live in a preview when the reader could open it in the chart packs
+    (cn-macro / jp-macro for everyone, region-* from Daily). 'derived/...' (no pack) is open on the Markets pages
+    - every market tile is shown - and locked elsewhere (the Region comparison tiles). Pack charts on a Markets
+    page (jp-markets ...) follow their pack."""
+    import packs
+    if not ref:
+        return False
+    pack = ref.split('/', 1)[0]
+    if pack == 'derived':                  # built from the daily market feeds (or Region comparisons): no pack
+        return page == 'markets'
+    return packs.can_read(pack, PACK_TIER.get(access or 'free', 'free'))
+
+
+def preview_page(economy: str, page: str, data: dict, access: Optional[str]) -> dict:
+    """The page for a signed-in reader whose plan doesn't include it: the full layout, with the tiles and charts
+    they could not open in the chart packs replaced by locked stubs (label / title only - no numbers leave here)."""
+    import copy
+    out = copy.deepcopy(data)
+    need = required_access(economy, page)
+
+    def tile(t):
+        if t.get('kind') == 'pending' or _open_ref(t.get('ref'), page, access):
+            return t
+        return {'kind': 'locked', 'label': t.get('label', ''), 'ref': None}
+
+    out['tiles'] = [tile(t) for t in out.get('tiles', [])]
+    for s in out.get('sections', []):
+        if s.get('tiles'):
+            s['tiles'] = [tile(t) for t in s['tiles']]
+    out['charts'] = {k: (c if _open_ref(k, page, access)
+                         else {'locked': True, 'title': c.get('title', ''), 'frequency': c.get('frequency')})
+                     for k, c in out.get('charts', {}).items()}
+    out['preview'] = {'required_access': need, 'required_label': ACCESS_LABEL[need],
+                      'your_access': access or 'free', 'your_label': ACCESS_LABEL.get(access or 'free', '')}
+    return out
 
 
 def page_list() -> list:
