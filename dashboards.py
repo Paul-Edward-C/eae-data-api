@@ -148,7 +148,7 @@ def _open_ref(ref: Optional[str], page: str, access: Optional[str]) -> bool:
 
 
 def preview_page(economy: str, page: str, data: dict, access: Optional[str]) -> dict:
-    """The page for a signed-in reader whose plan doesn't include it: the full layout, with the tiles and charts
+    """The page for a reader (signed in or not) whose plan doesn't include it: the full layout, with the tiles and charts
     they could not open in the chart packs replaced by locked stubs (label / title only - no numbers leave here)."""
     import copy
     out = copy.deepcopy(data)
@@ -167,7 +167,7 @@ def preview_page(economy: str, page: str, data: dict, access: Optional[str]) -> 
                          else {'locked': True, 'title': c.get('title', ''), 'frequency': c.get('frequency')})
                      for k, c in out.get('charts', {}).items()}
     out['preview'] = {'required_access': need, 'required_label': ACCESS_LABEL[need],
-                      'your_access': access or 'free', 'your_label': ACCESS_LABEL.get(access or 'free', '')}
+                      'your_access': access or 'anonymous', 'your_label': ACCESS_LABEL.get(access, '')}
     return out
 
 
