@@ -9,7 +9,7 @@ access level reaches it. Like the pack bundle it is never committed here: this r
 Access levels (api._determine_access), lowest first:
 
     free     anonymous visitors: nothing. Free members: every page as a PREVIEW (preview_page): the layout, with
-             live tiles only where the chart behind them is in a pack they can open (cn-macro, jp-macro) and on
+             live tiles only where the chart behind them is in a pack they can open (cn-macro, jp-fiscal) and on
              the Markets pages; the rest locked. Also the members page's taste.
     daily    "Daily" (and the legacy "Individual" plan): every economy's FRONT page, plus the Region front page
     premium  "Daily + Data": the front pages and every topic page
@@ -135,7 +135,7 @@ PACK_TIER = {'free': 'free', 'daily': 'daily', 'premium': 'premium', 'full': 'pr
 
 def _open_ref(ref: Optional[str], page: str, access: Optional[str]) -> bool:
     """A tile or chart ('pack/chart-id') stays live in a preview when the reader could open it in the chart packs
-    (cn-macro / jp-macro for everyone, region-* from Daily). 'derived/...' (no pack) is open on the Markets pages
+    (cn-macro / jp-fiscal for everyone, region-* from Daily). 'derived/...' (no pack) is open on the Markets pages
     - every market tile is shown - and locked elsewhere (the Region comparison tiles). Pack charts on a Markets
     page (jp-markets ...) follow their pack."""
     import packs

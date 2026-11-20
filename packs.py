@@ -40,9 +40,9 @@ PACKS_DIR = Path(os.environ.get(
     'PACKS_DIR', Path(__file__).parent / 'packs'
 )).expanduser()
 
-# The two packs that stay open. Override with PUBLIC_PACKS="cn-macro,jp-macro".
+# The two packs that stay open. Override with PUBLIC_PACKS="cn-macro,jp-fiscal".
 PUBLIC_PACKS = set(
-    p.strip() for p in os.environ.get('PUBLIC_PACKS', 'cn-macro,jp-macro').split(',')
+    p.strip() for p in os.environ.get('PUBLIC_PACKS', 'cn-macro,jp-fiscal').split(',')
     if p.strip()
 )
 
